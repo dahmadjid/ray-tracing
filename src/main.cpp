@@ -8,10 +8,12 @@
 int main() {
     
     Window w;
-    auto r = renderer::Renderer(w, "shaders/vertex.spv", "shaders/fragment.spv");
+    auto r = renderer::Renderer(w);
     while(!w.should_close()) {
-
+        r.draw_frame();
         glfwPollEvents();
     }
+    
+    r.wait_for_device_idle();
 
 }
