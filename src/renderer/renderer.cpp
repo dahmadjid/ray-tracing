@@ -2,7 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <set>
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <GLFW/glfw3.h>
 #include <vulkan/vk_enum_string_helper.h>
 #include <algorithm>
@@ -319,7 +319,7 @@ namespace renderer
         }
         else
         {
-            fmt::println("Selected Image Format: {}", selected_format.format);
+            fmt::println("Selected Image Format: {}", static_cast<int>(selected_format.format));
         }
         if (selected_present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
         {
@@ -327,7 +327,7 @@ namespace renderer
         }
         else
         {
-            fmt::println("Selected Presentation mode: {}", selected_present_mode);
+            fmt::println("Selected Presentation mode: {}", static_cast<int>(selected_present_mode));
         }
 
         if (details.capabilities.currentExtent.width == std::numeric_limits<uint32_t>::max())

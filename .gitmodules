@@ -1,9 +1,0 @@
-[submodule "libs/fmt"]
-	path = libs/fmt
-	url = git@github.com:fmtlib/fmt.git
-[submodule "libs/glm"]
-	path = libs/glm
-	url = git@github.com:g-truc/glm.git
-[submodule "libs/glfw"]
-	path = libs/glfw
-	url = git@github.com:glfw/glfw.git
