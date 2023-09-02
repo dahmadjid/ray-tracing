@@ -1,10 +1,17 @@
 #pragma once
+#include <cstdint>
 #include <string_view>
 #include <vector>
+#include <array>
 #include <set>
 #include <vulkan/vulkan.h>
 #include <optional>
+#include <vulkan/vulkan_core.h>
 #include "window/window.hpp"
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 
 namespace renderer {
 
@@ -29,15 +36,44 @@ struct SwapChainSupportDetails {
     std::vector<VkPresentModeKHR> present_modes;
 };
 
+struct Vertex {
+    glm::vec2 pos;
+    glm::vec3 color;
+
+    static VkVertexInputBindingDescription getBindingDescription() {
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(Vertex);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        return bindingDescription;
+    }
+
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+        return attributeDescriptions;
+    }
+};
+
 class Renderer {
     
 
     const std::vector<const char*> m_required_extensions = {
-            VK_KHR_SWAPCHAIN_EXTENSION_NAME
-        };
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    };
 
     const std::vector<const char *> validation_layers = {
-    "VK_LAYER_KHRONOS_validation"};
+        "VK_LAYER_KHRONOS_validation"
+    };
 
 #ifdef NDEBUG
     const bool enable_validation = false;
@@ -72,6 +108,15 @@ class Renderer {
     VkSemaphore m_image_available_semaphore;
     VkSemaphore m_render_finished_semaphore;
     VkFence m_in_flight_fence;
+    VkBuffer m_vertex_buffer;
+
+    VkDeviceMemory m_vertex_buffer_memory;
+
+    const std::vector<Vertex> m_vertices = {
+        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    };
 
     void create_instance();
     void setupDebugMessenger();
@@ -87,7 +132,9 @@ class Renderer {
     void create_command_buffer();
     void record_command_buffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
     void create_sync_objects();
-
+    void create_vertex_buffer();
+    
+    uint32_t find_memory_types(uint32_t type_filter, VkMemoryPropertyFlags properties);
     std::vector<char> read_shader(std::string_view file_path);
     VkShaderModule create_shader_module(const std::vector<char>& code);
     QueueFamilyIndices find_queue_families(const VkPhysicalDevice& device);

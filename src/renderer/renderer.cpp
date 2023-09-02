@@ -1,5 +1,7 @@
 #include "renderer.hpp"
+#include <cstdint>
 #include <fstream>
+#include <optional>
 #include <vector>
 #include <set>
 #include <fmt/format.h>
@@ -8,16 +10,35 @@
 #include <algorithm>
 #include <cstring>
 #include <iostream>
+#include <vulkan/vulkan_core.h>
+
+
+using std::optional;
 
 namespace renderer
 {
+    Renderer::Renderer(Window &window) : m_window(window) {
+        create_instance();
+        setupDebugMessenger();
+        create_surface();
+        pick_physical_device();
+        create_logical_device();
+        create_swap_chain();
+        create_image_views();
+        create_render_pass();
+        create_graphics_pipeline();
+        create_framebuffers();
+        create_command_pool();
+        create_vertex_buffer();
+        create_command_buffer();
+        create_sync_objects();
+    }
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-        void *pUserData)
-    {
+        void *pUserData) {
         std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 
         return VK_FALSE;
@@ -27,8 +48,7 @@ namespace renderer
         VkInstance instance,
         const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
         const VkAllocationCallbacks *pAllocator,
-        VkDebugUtilsMessengerEXT *pDebugMessenger)
-    {
+        VkDebugUtilsMessengerEXT *pDebugMessenger) {
         auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
             instance,
             "vkCreateDebugUtilsMessengerEXT");
@@ -42,8 +62,7 @@ namespace renderer
         }
     }
 
-    void DestroyDebugUtilsMessengerEXT( VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks *pAllocator)
-    {
+    void DestroyDebugUtilsMessengerEXT( VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks *pAllocator) {
         auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
             instance,
             "vkDestroyDebugUtilsMessengerEXT");
@@ -66,8 +85,7 @@ namespace renderer
     }
 
 
-    void Renderer::create_instance()
-    {
+    void Renderer::create_instance() {
         uint32_t layer_count;
         vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
@@ -148,8 +166,7 @@ namespace renderer
         }
     }
 
-    void Renderer::create_surface()
-    {
+    void Renderer::create_surface() {
         auto res = glfwCreateWindowSurface(m_instance, m_window.m_window, nullptr, &m_surface);
         if (res != VK_SUCCESS)
         {
@@ -159,8 +176,7 @@ namespace renderer
         fmt::println("Surface created successfully");
     }
 
-    void Renderer::pick_physical_device()
-    {
+    void Renderer::pick_physical_device() {
         uint32_t devices_count = 0;
         auto res = vkEnumeratePhysicalDevices(m_instance, &devices_count, NULL);
         if (res != VK_SUCCESS && res != VK_INCOMPLETE)
@@ -200,8 +216,7 @@ namespace renderer
         fmt::println("Found {} GPU", devices_count);
     }
 
-    QueueFamilyIndices Renderer::find_queue_families(const VkPhysicalDevice &device)
-    {
+    QueueFamilyIndices Renderer::find_queue_families(const VkPhysicalDevice &device) {
 
         uint32_t queues_count = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queues_count, nullptr);
@@ -231,8 +246,7 @@ namespace renderer
         return queues_indices_temp;
     }
 
-    bool Renderer::check_device_extensions_support(const VkPhysicalDevice &device)
-    {
+    bool Renderer::check_device_extensions_support(const VkPhysicalDevice &device) {
         uint32_t count;
         vkEnumerateDeviceExtensionProperties(device, nullptr, &count, nullptr);
 
@@ -252,8 +266,7 @@ namespace renderer
         return m_required_extensions.size() == required_found;
     }
 
-    void Renderer::create_logical_device()
-    {
+    void Renderer::create_logical_device() {
         auto queue_families = std::set({m_queues_indices.graphics.value(), m_queues_indices.presentation.value()});
         float prio = 1.0f;
         auto queues_create_infos = std::vector<VkDeviceQueueCreateInfo>();
@@ -291,8 +304,7 @@ namespace renderer
         fmt::println("Logical Device created successfully");
     }
 
-    void Renderer::create_swap_chain()
-    {
+    void Renderer::create_swap_chain() {
         auto details = query_swap_chain_support(m_phy);
         auto selected_format = details.formats[0];
         auto selected_present_mode = VK_PRESENT_MODE_FIFO_KHR;
@@ -390,8 +402,7 @@ namespace renderer
         m_swap_chain_extent = actual_extent;
     }
 
-    SwapChainSupportDetails Renderer::query_swap_chain_support(VkPhysicalDevice device)
-    {
+    SwapChainSupportDetails Renderer::query_swap_chain_support(VkPhysicalDevice device) {
         SwapChainSupportDetails details;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_surface, &details.capabilities);
 
@@ -523,13 +534,14 @@ namespace renderer
 
 
 
-
         VkPipelineVertexInputStateCreateInfo vertex_input_info{};
+        auto bindingDescription = Vertex::getBindingDescription();
+        auto attributeDescriptions = Vertex::getAttributeDescriptions();
         vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertex_input_info.vertexBindingDescriptionCount = 0;
-        vertex_input_info.pVertexBindingDescriptions = nullptr; // Optional
-        vertex_input_info.vertexAttributeDescriptionCount = 0;
-        vertex_input_info.pVertexAttributeDescriptions = nullptr; // Optional
+        vertex_input_info.vertexBindingDescriptionCount = 1;
+        vertex_input_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertex_input_info.pVertexBindingDescriptions = &bindingDescription;
+        vertex_input_info.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 
         VkPipelineInputAssemblyStateCreateInfo input_assembly{};
@@ -724,6 +736,12 @@ namespace renderer
         render_pass_info.pClearValues = &clear_color;
         vkCmdBeginRenderPass(m_command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdBindPipeline(m_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+
+
+        VkBuffer vertex_buffers[] = {m_vertex_buffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(m_command_buffer, 0, 1, vertex_buffers, offsets);
+
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
@@ -754,32 +772,67 @@ namespace renderer
         VkFenceCreateInfo fence_info{};
         fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-        if (vkCreateSemaphore(m_device, &semaphore_info, nullptr, &m_image_available_semaphore) != VK_SUCCESS ||
+        if (
+            vkCreateSemaphore(m_device, &semaphore_info, nullptr, &m_image_available_semaphore) != VK_SUCCESS ||
             vkCreateSemaphore(m_device, &semaphore_info, nullptr, &m_render_finished_semaphore) != VK_SUCCESS ||
-            vkCreateFence(m_device, &fence_info, nullptr, &m_in_flight_fence) != VK_SUCCESS) 
-        {
+            vkCreateFence(m_device, &fence_info, nullptr, &m_in_flight_fence) != VK_SUCCESS
+        ) {
+
             fmt::println("FAILED TO CEATE SYNC OBJECTS");
             exit(1);
         }
     }
 
-    Renderer::Renderer(Window &window)
-        : m_window(window)
-    {
+    void Renderer::create_vertex_buffer() {
+        VkBufferCreateInfo buffer_info{};
+        buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        buffer_info.size = sizeof(m_vertices[0]) * m_vertices.size();
+        buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         
-        create_instance();
-        setupDebugMessenger();
-        create_surface();
-        pick_physical_device();
-        create_logical_device();
-        create_swap_chain();
-        create_image_views();
-        create_render_pass();
-        create_graphics_pipeline();
-        create_framebuffers();
-        create_command_pool();
-        create_command_buffer();
-        create_sync_objects();
+        auto res = vkCreateBuffer(m_device, &buffer_info, nullptr, &m_vertex_buffer);
+        if (res != VK_SUCCESS) {
+            fmt::println("FAILED TO CREATE VERTEX BUFFER: {}", string_VkResult(res));
+            exit(1);
+        }
+        VkMemoryRequirements mem_requirements;
+        vkGetBufferMemoryRequirements(m_device, m_vertex_buffer, &mem_requirements);
+        VkMemoryAllocateInfo alloc_info{};
+        alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        alloc_info.allocationSize = mem_requirements.size;
+        alloc_info.memoryTypeIndex = find_memory_types(
+            mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        );
+
+        res = vkAllocateMemory(m_device, &alloc_info, nullptr, &m_vertex_buffer_memory);
+        if (res != VK_SUCCESS) {
+            fmt::println("FAILED TO ALLOCATE MEMORY FOR VERTEX BUFFER: {}", string_VkResult(res));
+            exit(1);
+        }
+
+        res = vkBindBufferMemory(m_device, m_vertex_buffer, m_vertex_buffer_memory, 0);
+        if (res != VK_SUCCESS) {
+            fmt::println("FAILED TO BIND MEMORY TO VERTEX BUFFER: {}", string_VkResult(res));
+            exit(1);
+        }
+
+        void* data;
+        vkMapMemory(m_device, m_vertex_buffer_memory, 0, buffer_info.size, 0, &data);
+        memcpy(data, m_vertices.data(), (size_t) buffer_info.size);
+        vkUnmapMemory(m_device, m_vertex_buffer_memory);
+    }
+
+    uint32_t Renderer::find_memory_types(uint32_t type_filter, VkMemoryPropertyFlags properties) {
+        VkPhysicalDeviceMemoryProperties mem_properties;
+        vkGetPhysicalDeviceMemoryProperties(m_phy, &mem_properties);
+        for (uint32_t i = 0; i < mem_properties.memoryTypeCount; i++) {
+            if ((type_filter & (1 << i)) && (mem_properties.memoryTypes[i].propertyFlags & properties) == properties) {
+                return i;
+            }
+        }
+        fmt::println("FAILED TO FIND MEMORY TYPE FOR THE BUFFER");
+        exit(1);
+        return 0;
     }
 
     void Renderer::draw_frame() {
@@ -823,8 +876,7 @@ namespace renderer
         vkQueuePresentKHR(m_queues.presentation, &present_info);
     }
 
-    void Renderer::setupDebugMessenger()
-    {
+    void Renderer::setupDebugMessenger() {
         if (!enable_validation)
             return;
         VkDebugUtilsMessengerCreateInfoEXT createInfo;
@@ -837,8 +889,7 @@ namespace renderer
 
     }
 
-    std::vector<char> Renderer::read_shader(std::string_view file_path)
-    {
+    std::vector<char> Renderer::read_shader(std::string_view file_path) {
         std::ifstream stream;
         stream.open(file_path.data(), std::ios_base::ate | std::ios_base::binary);
         if (!stream.good())
@@ -858,8 +909,7 @@ namespace renderer
         vkDeviceWaitIdle(m_device);
     }
 
-    Renderer::~Renderer()
-    {
+    Renderer::~Renderer() {
         vkDestroySemaphore(m_device, m_image_available_semaphore, nullptr);
         vkDestroySemaphore(m_device, m_render_finished_semaphore, nullptr);
         vkDestroyFence(m_device, m_in_flight_fence, nullptr);
@@ -875,6 +925,8 @@ namespace renderer
             vkDestroyImageView(m_device, image_view, nullptr);
         }
         vkDestroySwapchainKHR(m_device, m_swap_chain, nullptr);
+        vkDestroyBuffer(m_device, m_vertex_buffer, nullptr);
+        vkFreeMemory(m_device, m_vertex_buffer_memory, nullptr);
         vkDestroyDevice(m_device, nullptr);
         vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         if (enable_validation) {
