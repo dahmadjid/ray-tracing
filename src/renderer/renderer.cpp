@@ -13,10 +13,11 @@
 #include <vulkan/vulkan_core.h>
 
 
-using std::optional;
-
 namespace renderer
 {
+    
+
+
     Renderer::Renderer(Window &window) : m_window(window) {
         create_instance();
         setupDebugMessenger();
@@ -30,6 +31,7 @@ namespace renderer
         create_framebuffers();
         create_command_pool();
         create_vertex_buffer();
+        create_index_buffer();
         create_command_buffer();
         create_sync_objects();
     }
@@ -740,7 +742,11 @@ namespace renderer
 
         VkBuffer vertex_buffers[] = {m_vertex_buffer};
         VkDeviceSize offsets[] = {0};
+
         vkCmdBindVertexBuffers(m_command_buffer, 0, 1, vertex_buffers, offsets);
+
+        vkCmdBindIndexBuffer(m_command_buffer, m_index_buffer, 0, VK_INDEX_TYPE_UINT16);
+
 
         VkViewport viewport{};
         viewport.x = 0.0f;
@@ -756,7 +762,7 @@ namespace renderer
         scissor.extent = m_swap_chain_extent;
         vkCmdSetScissor(m_command_buffer, 0, 1, &scissor);
 
-        vkCmdDraw(m_command_buffer, 3, 1, 0, 0);
+        vkCmdDrawIndexed(m_command_buffer, static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
 
         vkCmdEndRenderPass(m_command_buffer);
         res = vkEndCommandBuffer(m_command_buffer);
@@ -783,43 +789,138 @@ namespace renderer
         }
     }
 
-    void Renderer::create_vertex_buffer() {
+    void Renderer::create_buffer(
+        VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& buffer_memory
+    ) {
         VkBufferCreateInfo buffer_info{};
         buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_info.size = sizeof(m_vertices[0]) * m_vertices.size();
-        buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        buffer_info.size = size;
+        buffer_info.usage = usage;
         buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         
-        auto res = vkCreateBuffer(m_device, &buffer_info, nullptr, &m_vertex_buffer);
+        auto res = vkCreateBuffer(m_device, &buffer_info, nullptr, &buffer);
         if (res != VK_SUCCESS) {
-            fmt::println("FAILED TO CREATE VERTEX BUFFER: {}", string_VkResult(res));
+            fmt::println("FAILED TO CREATE BUFFER: {}", string_VkResult(res));
             exit(1);
         }
         VkMemoryRequirements mem_requirements;
-        vkGetBufferMemoryRequirements(m_device, m_vertex_buffer, &mem_requirements);
+        vkGetBufferMemoryRequirements(m_device, buffer, &mem_requirements);
         VkMemoryAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         alloc_info.allocationSize = mem_requirements.size;
-        alloc_info.memoryTypeIndex = find_memory_types(
-            mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        alloc_info.memoryTypeIndex = find_memory_types(mem_requirements.memoryTypeBits, properties);
+
+        res = vkAllocateMemory(m_device, &alloc_info, nullptr, &buffer_memory);
+        if (res != VK_SUCCESS) {
+            fmt::println("FAILED TO ALLOCATE MEMORY FOR BUFFER: {}", string_VkResult(res));
+            exit(1);
+        }
+
+        res = vkBindBufferMemory(m_device, buffer, buffer_memory, 0);
+        if (res != VK_SUCCESS) {
+            fmt::println("FAILED TO BIND MEMORY TO BUFFER: {}", string_VkResult(res));
+            exit(1);
+        }
+    }
+
+    void Renderer::create_vertex_buffer() {
+        
+        VkDeviceSize buffer_size = sizeof(m_vertices[0]) * m_vertices.size();
+
+
+        VkBuffer staging_buffer;
+        VkDeviceMemory staging_buffer_memory;
+        create_buffer(
+            buffer_size, 
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+            staging_buffer, 
+            staging_buffer_memory
+        );
+        
+        void* data;
+        vkMapMemory(m_device, staging_buffer_memory, 0, buffer_size, 0, &data);
+        memcpy(data, m_vertices.data(), (size_t) buffer_size);
+        vkUnmapMemory(m_device, staging_buffer_memory);
+
+        create_buffer(
+            buffer_size, 
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+            m_vertex_buffer, 
+            m_vertex_buffer_memory
         );
 
-        res = vkAllocateMemory(m_device, &alloc_info, nullptr, &m_vertex_buffer_memory);
-        if (res != VK_SUCCESS) {
-            fmt::println("FAILED TO ALLOCATE MEMORY FOR VERTEX BUFFER: {}", string_VkResult(res));
-            exit(1);
-        }
+        copy_buffer(staging_buffer, m_vertex_buffer, buffer_size);
+        
+        vkDestroyBuffer(m_device, staging_buffer, nullptr);
+        vkFreeMemory(m_device, staging_buffer_memory, nullptr);
+    }
 
-        res = vkBindBufferMemory(m_device, m_vertex_buffer, m_vertex_buffer_memory, 0);
-        if (res != VK_SUCCESS) {
-            fmt::println("FAILED TO BIND MEMORY TO VERTEX BUFFER: {}", string_VkResult(res));
-            exit(1);
-        }
+    void Renderer::create_index_buffer() {
+        
+        VkDeviceSize buffer_size = sizeof(m_indices[0]) * m_indices.size();
 
+
+        VkBuffer staging_buffer;
+        VkDeviceMemory staging_buffer_memory;
+        create_buffer(
+            buffer_size, 
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+            staging_buffer, 
+            staging_buffer_memory
+        );
+        
         void* data;
-        vkMapMemory(m_device, m_vertex_buffer_memory, 0, buffer_info.size, 0, &data);
-        memcpy(data, m_vertices.data(), (size_t) buffer_info.size);
-        vkUnmapMemory(m_device, m_vertex_buffer_memory);
+        vkMapMemory(m_device, staging_buffer_memory, 0, buffer_size, 0, &data);
+        memcpy(data, m_indices.data(), (size_t) buffer_size);
+        vkUnmapMemory(m_device, staging_buffer_memory);
+
+        create_buffer(
+            buffer_size, 
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+            m_index_buffer, 
+            m_index_buffer_memory
+        );
+
+        copy_buffer(staging_buffer, m_index_buffer, buffer_size);
+        
+        vkDestroyBuffer(m_device, staging_buffer, nullptr);
+        vkFreeMemory(m_device, staging_buffer_memory, nullptr);
+    }
+
+    void Renderer::copy_buffer(VkBuffer src, VkBuffer dst, VkDeviceSize size) {
+        VkCommandBufferAllocateInfo alloc_info{};
+        alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        alloc_info.commandPool = m_command_pool;
+        alloc_info.commandBufferCount = 1;
+        VkCommandBuffer command_buffer;
+        vkAllocateCommandBuffers(m_device, &alloc_info, &command_buffer);
+
+        VkCommandBufferBeginInfo begin_info{};
+        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(command_buffer, &begin_info);
+
+        VkBufferCopy copy_region{};
+        copy_region.srcOffset = 0; // Optional
+        copy_region.dstOffset = 0; // Optional
+        copy_region.size = size;
+        vkCmdCopyBuffer(command_buffer, src, dst, 1, &copy_region);
+        
+        vkEndCommandBuffer(command_buffer);
+
+        VkSubmitInfo submit_info{};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &command_buffer;
+        vkQueueSubmit(m_queues.graphics, 1, &submit_info, VK_NULL_HANDLE);
+        vkQueueWaitIdle(m_queues.graphics);
+
+        vkFreeCommandBuffers(m_device, m_command_pool, 1, &command_buffer);
     }
 
     uint32_t Renderer::find_memory_types(uint32_t type_filter, VkMemoryPropertyFlags properties) {
@@ -925,8 +1026,13 @@ namespace renderer
             vkDestroyImageView(m_device, image_view, nullptr);
         }
         vkDestroySwapchainKHR(m_device, m_swap_chain, nullptr);
+
         vkDestroyBuffer(m_device, m_vertex_buffer, nullptr);
         vkFreeMemory(m_device, m_vertex_buffer_memory, nullptr);
+
+        vkDestroyBuffer(m_device, m_index_buffer, nullptr);
+        vkFreeMemory(m_device, m_index_buffer_memory, nullptr);
+
         vkDestroyDevice(m_device, nullptr);
         vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         if (enable_validation) {

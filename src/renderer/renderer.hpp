@@ -108,14 +108,22 @@ class Renderer {
     VkSemaphore m_image_available_semaphore;
     VkSemaphore m_render_finished_semaphore;
     VkFence m_in_flight_fence;
-    VkBuffer m_vertex_buffer;
 
+    VkBuffer m_vertex_buffer;
     VkDeviceMemory m_vertex_buffer_memory;
 
+    VkBuffer m_index_buffer;
+    VkDeviceMemory m_index_buffer_memory;
+
     const std::vector<Vertex> m_vertices = {
-        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+    };
+
+    const std::vector<uint16_t> m_indices = {
+        0, 1, 2, 2, 3, 0
     };
 
     void create_instance();
@@ -132,8 +140,11 @@ class Renderer {
     void create_command_buffer();
     void record_command_buffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
     void create_sync_objects();
+    void create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& buffer_memory);
     void create_vertex_buffer();
-    
+    void create_index_buffer();
+    void copy_buffer(VkBuffer src, VkBuffer dst, VkDeviceSize size);
+
     uint32_t find_memory_types(uint32_t type_filter, VkMemoryPropertyFlags properties);
     std::vector<char> read_shader(std::string_view file_path);
     VkShaderModule create_shader_module(const std::vector<char>& code);
