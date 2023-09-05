@@ -3,6 +3,7 @@
 #include <fmt/core.h>
 #include <fstream>
 #include <optional>
+#include <ratio>
 #include <vector>
 #include <set>
 #include <fmt/format.h>
@@ -1086,7 +1087,8 @@ namespace renderer
         if (res != VK_SUCCESS) {
             fmt::println("FAILED TO CREATE DESCRIPTOR SETS: {}", string_VkResult(res));
         }
-        // TODO use std::vector and see what happens
+        std::vector<VkWriteDescriptorSet> descriptor_writes;
+        descriptor_writes.resize(MAX_FRAMES_IN_FLIGHT);
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             VkDescriptorBufferInfo buffer_info{};
             buffer_info.buffer = m_uniform_buffers[i];
@@ -1102,8 +1104,9 @@ namespace renderer
             descriptor_write.pBufferInfo = &buffer_info;
             descriptor_write.pImageInfo = nullptr; // Optional
             descriptor_write.pTexelBufferView = nullptr; // Optional
-            vkUpdateDescriptorSets(m_device, 1, &descriptor_write, 0, nullptr);
+            descriptor_writes[i] = descriptor_write;
         }
+        vkUpdateDescriptorSets(m_device, descriptor_writes.size(), descriptor_writes.data(), 0, nullptr);
     }
 
     void Renderer::setupDebugMessenger() {

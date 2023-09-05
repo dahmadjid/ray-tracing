@@ -16,6 +16,7 @@ find_package(fmt REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(Catch2)
+
 execute_process(
     COMMAND bash shaders/compile_shaders.sh
 )
