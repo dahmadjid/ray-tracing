@@ -12,6 +12,8 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
+
 
 namespace renderer {
 
@@ -64,8 +66,14 @@ struct Vertex {
     }
 };
 
+struct UniformBufferObject {
+    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
+};
+
 class Renderer {
-    
+
 
     const std::vector<const char*> m_required_extensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -80,6 +88,7 @@ class Renderer {
 #else
     const bool enable_validation = true;
 #endif
+    const int MAX_FRAMES_IN_FLIGHT = 2;
 
     VkInstance m_instance;
     VkDebugUtilsMessengerEXT debugMessenger;
@@ -90,7 +99,6 @@ class Renderer {
     VkSurfaceKHR m_surface;
     Window& m_window;
 
-
     VkSwapchainKHR m_swap_chain;
 
     VkFormat m_swap_chain_image_format;
@@ -100,20 +108,29 @@ class Renderer {
     std::vector<VkFramebuffer> m_swap_chain_framebuffers;
 
     VkRenderPass m_render_pass;
+    VkDescriptorSetLayout m_descriptor_set_layout;
     VkPipelineLayout m_pipeline_layout;
     VkPipeline m_pipeline;
     VkCommandPool m_command_pool;
-    VkCommandBuffer m_command_buffer;
+    std::vector<VkCommandBuffer> m_command_buffers;
 
-    VkSemaphore m_image_available_semaphore;
-    VkSemaphore m_render_finished_semaphore;
-    VkFence m_in_flight_fence;
-
+    std::vector<VkSemaphore> m_image_available_semaphores;
+    std::vector<VkSemaphore> m_render_finished_semaphores;
+    std::vector<VkFence> m_in_flight_fences;
+    uint32_t m_current_frame = 0;
+    
     VkBuffer m_vertex_buffer;
     VkDeviceMemory m_vertex_buffer_memory;
 
     VkBuffer m_index_buffer;
     VkDeviceMemory m_index_buffer_memory;
+
+    std::vector<VkBuffer> m_uniform_buffers;
+    std::vector<VkDeviceMemory> m_uniform_buffers_memory;
+    std::vector<void*> m_uniform_buffers_mapped;
+    VkDescriptorPool m_descriptor_pool;
+    std::vector<VkDescriptorSet> m_descriptor_sets;    
+
 
     const std::vector<Vertex> m_vertices = {
         {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
@@ -137,14 +154,21 @@ class Renderer {
     void create_graphics_pipeline();
     void create_framebuffers();
     void create_command_pool();
-    void create_command_buffer();
-    void record_command_buffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+    void create_command_buffers();
+    void record_command_buffer(VkCommandBuffer command_buffer, uint32_t image_index);
     void create_sync_objects();
+    void recreate_swap_chain();
+    void cleanup_swap_chain();  
+
     void create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& buffer_memory);
     void create_vertex_buffer();
     void create_index_buffer();
     void copy_buffer(VkBuffer src, VkBuffer dst, VkDeviceSize size);
-
+    void create_descriptor_set_layout();
+    void create_descriptor_pool();
+    void create_descriptor_sets();
+    void create_uniform_buffers();
+    void update_uniform_buffers(uint32_t current_frame);
     uint32_t find_memory_types(uint32_t type_filter, VkMemoryPropertyFlags properties);
     std::vector<char> read_shader(std::string_view file_path);
     VkShaderModule create_shader_module(const std::vector<char>& code);

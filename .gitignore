@@ -4,3 +4,4 @@ build
 venv
 compile_commands.json
 CMakeUserPresets.json
+*.spv

@@ -11,7 +11,7 @@ else()
     add_link_options(-fsanitize=address -fuse-ld=lld)
 endif()
 
-find_package (Vulkan REQUIRED)
+find_package(Vulkan REQUIRED)
 find_package(fmt REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
