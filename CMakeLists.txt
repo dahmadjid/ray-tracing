@@ -16,6 +16,7 @@ find_package(fmt REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(Catch2)
+find_package(stb)
 
 execute_process(
     COMMAND bash shaders/compile_shaders.sh
@@ -31,4 +32,4 @@ add_executable(renderer
 )
 
 target_include_directories(renderer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src) 
-target_link_libraries(renderer fmt::fmt glfw glm::glm Catch2::Catch2 vulkan)
+target_link_libraries(renderer fmt::fmt glfw glm::glm Catch2::Catch2 vulkan stb::stb)
