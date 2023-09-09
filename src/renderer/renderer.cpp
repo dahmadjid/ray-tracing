@@ -180,7 +180,7 @@ namespace renderer
     }
 
     void Renderer::create_surface() {
-        auto res = glfwCreateWindowSurface(m_instance, m_window.m_window, nullptr, &m_surface);
+        auto res = glfwCreateWindowSurface(m_instance, m_window.m_glfw_window, nullptr, &m_surface);
         if (res != VK_SUCCESS) {
             panic("FAILED TO CREATE VK SURFACE: {}", string_VkResult(res));
 
@@ -349,7 +349,7 @@ namespace renderer
 
         if (details.capabilities.currentExtent.width == std::numeric_limits<uint32_t>::max()) {
             int width, height;
-            glfwGetFramebufferSize(m_window.m_window, &width, &height);
+            glfwGetFramebufferSize(m_window.m_glfw_window, &width, &height);
             actual_extent.width = std::clamp((uint32_t)width, details.capabilities.minImageExtent.width, details.capabilities.maxImageExtent.width);
             actual_extent.height = std::clamp((uint32_t)height, details.capabilities.minImageExtent.height, details.capabilities.maxImageExtent.height);
         }
@@ -731,6 +731,11 @@ namespace renderer
             panic("FAILED TO BEGIN RECORDING COMMAND BUFFER: {}", string_VkResult(res));
 
         }
+
+        if (m_image_updated) {
+            write_image(command_buffer, m_current_frame);
+        }
+
         VkRenderPassBeginInfo render_pass_info{};
         render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         render_pass_info.renderPass = m_render_pass;
@@ -1023,7 +1028,6 @@ namespace renderer
 
         }
         
-        write_image();
         // update_uniform_buffers(m_current_frame);
         vkResetCommandBuffer(m_command_buffers[m_current_frame], 0);
         record_command_buffer(m_command_buffers[m_current_frame], image_index);
@@ -1063,7 +1067,6 @@ namespace renderer
             return;
         } else if (res != VK_SUCCESS) {
             panic("FAILED TO ACQUIRE NEXT IMAGE KHR: {}", string_VkResult(res));
-
         }
         m_current_frame = (m_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
@@ -1212,16 +1215,25 @@ namespace renderer
     }
 
     void Renderer::create_texture_image() {
-        m_pixels = stbi_load("logo.png", &m_width, &m_height, &m_channels, STBI_rgb_alpha);
-        m_image_size = m_width * m_height * 4;
+        m_image_size = m_swap_chain_extent.height * m_swap_chain_extent.width * 4;
+        m_image_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+        m_image_buffers_memory.resize(MAX_FRAMES_IN_FLIGHT);
+        m_image_buffers_mapped.resize(MAX_FRAMES_IN_FLIGHT);
 
-        if (!m_pixels) {
-            panic("Failed to read image");
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            create_buffer(
+                m_image_size,
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                m_image_buffers[i],
+                m_image_buffers_memory[i]
+            );
+            vkMapMemory(m_device, m_image_buffers_memory[i], 0, m_image_size, 0, &m_image_buffers_mapped[i]);
         }
 
         create_image(
-            m_width,
-            m_height,
+            m_swap_chain_extent.width,
+            m_swap_chain_extent.height,
             VK_FORMAT_R8G8B8A8_SRGB, 
             VK_IMAGE_TILING_OPTIMAL, 
             VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 
@@ -1232,26 +1244,17 @@ namespace renderer
 
     }
 
-    void Renderer::write_image() {
-        VkBuffer staging_buffer;
-        VkDeviceMemory staging_buffer_memory;
-        create_buffer(
-            m_image_size,
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            staging_buffer,
-            staging_buffer_memory
+    void Renderer::write_image(VkCommandBuffer command_buffer, uint32_t current_frame) {
+        memcpy(m_image_buffers_mapped[0], m_image_data, static_cast<size_t>(m_image_size));
+        transition_image_layout(m_texture_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, command_buffer);
+        copy_buffer_to_image(
+            m_image_buffers[0], 
+            m_texture_image, 
+            static_cast<uint32_t>(m_swap_chain_extent.width), 
+            static_cast<uint32_t>(m_swap_chain_extent.height), 
+            command_buffer
         );
-
-        void* data;
-        vkMapMemory(m_device, staging_buffer_memory, 0, m_image_size, 0, &data);
-        memcpy(data, m_pixels, static_cast<size_t>(m_image_size));
-        vkUnmapMemory(m_device, staging_buffer_memory);
-        transition_image_layout(m_texture_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        copy_buffer_to_image(staging_buffer, m_texture_image, static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height));
-        transition_image_layout(m_texture_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        vkDestroyBuffer(m_device, staging_buffer, nullptr);
-        vkFreeMemory(m_device, staging_buffer_memory, nullptr);
+        transition_image_layout(m_texture_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, command_buffer);
     }
 
     void Renderer::create_image(
@@ -1298,8 +1301,7 @@ namespace renderer
 
     }
 
-    void Renderer::transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout) {
-        auto command_buffer = begin_single_time_commands();
+    void Renderer::transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, VkCommandBuffer command_buffer) {
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.oldLayout = old_layout;
@@ -1341,11 +1343,9 @@ namespace renderer
             1, &barrier
         );
 
-        end_single_time_commands(command_buffer);
     }
 
-    void Renderer::copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
-        auto command_buffer = begin_single_time_commands();
+    void Renderer::copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, VkCommandBuffer command_buffer) {
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
         region.bufferRowLength = 0;
@@ -1365,7 +1365,6 @@ namespace renderer
 
         vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
         
-        end_single_time_commands(command_buffer);
     }
 
     void Renderer::create_texture_image_view() {
@@ -1410,9 +1409,12 @@ namespace renderer
         }
     }
     
+    void Renderer::update_image(uint8_t *image_data) {
+        m_image_data = image_data;
+        m_image_updated = true;
+    }
+
     Renderer::~Renderer() {
-
-
         this->cleanup_swap_chain();
         vkDestroySampler(m_device, m_texture_sampler, nullptr);
         vkDestroyImageView(m_device, m_texture_image_view, nullptr);
@@ -1421,7 +1423,6 @@ namespace renderer
         vkDestroyPipeline(m_device, m_pipeline, nullptr);
         vkDestroyPipelineLayout(m_device, m_pipeline_layout, nullptr);
         vkDestroyRenderPass(m_device, m_render_pass, nullptr);
-        stbi_image_free(m_pixels);
 
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(m_device, m_image_available_semaphores[i], nullptr);
@@ -1441,7 +1442,12 @@ namespace renderer
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroyBuffer(m_device, m_uniform_buffers[i], nullptr);
             vkFreeMemory(m_device, m_uniform_buffers_memory[i], nullptr);
+
+            vkDestroyBuffer(m_device, m_image_buffers[i], nullptr);
+            vkFreeMemory(m_device, m_image_buffers_memory[i], nullptr);
         }
+
+            
         vkDestroyDescriptorPool(m_device, m_descriptor_pool, nullptr);
         vkDestroyDescriptorSetLayout(m_device, m_descriptor_set_layout, nullptr);
 

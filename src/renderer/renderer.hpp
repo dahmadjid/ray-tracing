@@ -144,12 +144,14 @@ class Renderer {
     void* m_texture_image_mapped;
     VkImageView m_texture_image_view;
     VkSampler m_texture_sampler;
-    stbi_uc* m_pixels;
-    VkDeviceSize m_image_size;
-    int m_width;
-    int m_height;
-    int m_channels;
 
+    std::vector<VkBuffer> m_image_buffers;
+    std::vector<VkDeviceMemory> m_image_buffers_memory;
+    std::vector<void*> m_image_buffers_mapped;
+    
+    uint8_t* m_image_data;
+    VkDeviceSize m_image_size;
+    bool m_image_updated = false;
 
     const std::vector<Vertex> m_vertices = {
         {{-1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
@@ -209,15 +211,15 @@ class Renderer {
     SwapChainSupportDetails query_swap_chain_support(VkPhysicalDevice device);
     VkCommandBuffer begin_single_time_commands();
     void end_single_time_commands(VkCommandBuffer command_buffer);
-    void transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout);
-    void copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+    void transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, VkCommandBuffer command_buffer);
+    void copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, VkCommandBuffer command_buffer);
     void create_texture_image_view(); 
-    void write_image();
+    void write_image(VkCommandBuffer command_buffer, uint32_t current_frame);
 public:
     Renderer(Window& window);
     void draw_frame();
     void wait_for_device_idle();
-
+    void update_image(uint8_t* image_data);
     ~Renderer();
 
 };

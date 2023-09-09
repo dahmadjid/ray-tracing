@@ -1,12 +1,22 @@
-#include "window/window.hpp"
-
 #include <fmt/core.h>
+#include "window/window.hpp"
 #include "renderer/renderer.hpp"
+#include "stb_include.h"
+#include "utils/Panic.hpp"
 int main() {
-    
-    Window w;
+    // image width and height needs to be the same as window size
+    // window is not resizable
+
+    Window w(800, 600);
     auto r = renderer::Renderer(w);
+    
+    int width, height, channels;
+    stbi_uc* image = stbi_load("logo.png", &width, &height, &channels, STBI_rgb_alpha);
+    if (!image) {
+        panic("Failed to read image");
+    }
     while(!w.should_close()) {
+        r.update_image(image);
         r.draw_frame();
         glfwPollEvents();
     }
