@@ -94,7 +94,7 @@ class Renderer {
 #ifdef NDEBUG
     const bool enable_validation = false;
 #else
-    const bool enable_validation = true;
+    const bool enable_validation = false;
 #endif
     const int MAX_FRAMES_IN_FLIGHT = 2;
 

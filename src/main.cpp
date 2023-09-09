@@ -1,8 +1,12 @@
+#include <chrono>
 #include <fmt/core.h>
+#include "utils/ScopedTimer.hpp"
 #include "window/window.hpp"
 #include "renderer/renderer.hpp"
 #include "stb_include.h"
 #include "utils/Panic.hpp"
+
+
 int main() {
     // image width and height needs to be the same as window size
     // window is not resizable
@@ -17,10 +21,12 @@ int main() {
     }
     while(!w.should_close()) {
         r.update_image(image);
-        r.draw_frame();
+        {
+            ScopedTimer<std::chrono::microseconds, false> s("");
+            r.draw_frame();
+        }
         glfwPollEvents();
     }
     
     r.wait_for_device_idle();
-
 }

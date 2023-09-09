@@ -359,7 +359,7 @@ namespace renderer
             image_count = details.capabilities.maxImageCount;
         }
 
-        fmt::println("Extent Width: {}, Extent Height: {}, Image Count: {})", actual_extent.width, actual_extent.height, image_count);
+        fmt::println("Extent Width: {}, Extent Height: {}, Image Count: {}", actual_extent.width, actual_extent.height, image_count);
 
         VkSwapchainCreateInfoKHR create_info{};
         create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
