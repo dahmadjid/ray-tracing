@@ -13,7 +13,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
-
+#include <stb_image.h>
 
 namespace renderer {
 
@@ -141,14 +141,21 @@ class Renderer {
 
     VkImage m_texture_image;
     VkDeviceMemory m_texture_image_memory;
+    void* m_texture_image_mapped;
     VkImageView m_texture_image_view;
     VkSampler m_texture_sampler;
-   
+    stbi_uc* m_pixels;
+    VkDeviceSize m_image_size;
+    int m_width;
+    int m_height;
+    int m_channels;
+
+
     const std::vector<Vertex> m_vertices = {
-        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+        {{-1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+        {{1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+        {{1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+        {{-1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
     };
 
     const std::vector<uint16_t> m_indices = {
@@ -202,10 +209,10 @@ class Renderer {
     SwapChainSupportDetails query_swap_chain_support(VkPhysicalDevice device);
     VkCommandBuffer begin_single_time_commands();
     void end_single_time_commands(VkCommandBuffer command_buffer);
-    void transition_image_layout(VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout);
+    void transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout);
     void copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
     void create_texture_image_view(); 
-
+    void write_image();
 public:
     Renderer(Window& window);
     void draw_frame();

@@ -17,10 +17,12 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include "utils/Panic.hpp"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#include "utils/Panic.hpp"
 namespace renderer
 {
     namespace chrono = std::chrono;
@@ -585,14 +587,14 @@ namespace renderer
         rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
         rasterizer.depthBiasEnable = VK_FALSE;
         rasterizer.depthBiasConstantFactor = 0.0f; // Optional
         rasterizer.depthBiasClamp = 0.0f; // Optional
         rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
 
 
-    VkPipelineMultisampleStateCreateInfo multisampling{};
+        VkPipelineMultisampleStateCreateInfo multisampling{};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisampling.sampleShadingEnable = VK_FALSE;
         multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
@@ -632,7 +634,6 @@ namespace renderer
         auto res = vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipeline_layout);
         if (res != VK_SUCCESS) {
             panic("FAILED TO CREATE PIPELINE LAYOUT: {}", string_VkResult(res));
-
         }
 
 
@@ -685,9 +686,7 @@ namespace renderer
             framebufferInfo.layers = 1;
             auto res = vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_swap_chain_framebuffers[i]);
             if (res != VK_SUCCESS) {
-            panic("FAILED TO CREATE FRAMEBUFFER: {}", string_VkResult(res));
-
-
+                panic("FAILED TO CREATE FRAMEBUFFER: {}", string_VkResult(res));
             }
         }
     }
@@ -741,6 +740,8 @@ namespace renderer
         VkClearValue clear_color = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
         render_pass_info.clearValueCount = 1;
         render_pass_info.pClearValues = &clear_color;
+
+
         vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
@@ -1022,8 +1023,8 @@ namespace renderer
 
         }
         
-
-        update_uniform_buffers(m_current_frame);
+        write_image();
+        // update_uniform_buffers(m_current_frame);
         vkResetCommandBuffer(m_command_buffers[m_current_frame], 0);
         record_command_buffer(m_command_buffers[m_current_frame], image_index);
     
@@ -1211,28 +1212,16 @@ namespace renderer
     }
 
     void Renderer::create_texture_image() {
-        int width, height, channels;
-        stbi_uc* pixels = stbi_load("logo.png", &width, &height, &channels, STBI_rgb_alpha);
-        VkDeviceSize image_size = width * height * 4;
-        if (!pixels) {
+        m_pixels = stbi_load("logo.png", &m_width, &m_height, &m_channels, STBI_rgb_alpha);
+        m_image_size = m_width * m_height * 4;
+
+        if (!m_pixels) {
             panic("Failed to read image");
         }
-        VkBuffer staging_buffer;
-        VkDeviceMemory staging_buffer_memory;
-        create_buffer(image_size,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        staging_buffer, staging_buffer_memory);
-
-        void* data;
-        vkMapMemory(m_device, staging_buffer_memory, 0, image_size, 0, &data);
-        memcpy(data, pixels, static_cast<size_t>(image_size));
-        vkUnmapMemory(m_device, staging_buffer_memory);
-        stbi_image_free(pixels);
 
         create_image(
-            width,
-            height,
+            m_width,
+            m_height,
             VK_FORMAT_R8G8B8A8_SRGB, 
             VK_IMAGE_TILING_OPTIMAL, 
             VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 
@@ -1241,9 +1230,26 @@ namespace renderer
             m_texture_image_memory
         );
 
-        transition_image_layout(m_texture_image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        copy_buffer_to_image(staging_buffer, m_texture_image, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-        transition_image_layout(m_texture_image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    }
+
+    void Renderer::write_image() {
+        VkBuffer staging_buffer;
+        VkDeviceMemory staging_buffer_memory;
+        create_buffer(
+            m_image_size,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            staging_buffer,
+            staging_buffer_memory
+        );
+
+        void* data;
+        vkMapMemory(m_device, staging_buffer_memory, 0, m_image_size, 0, &data);
+        memcpy(data, m_pixels, static_cast<size_t>(m_image_size));
+        vkUnmapMemory(m_device, staging_buffer_memory);
+        transition_image_layout(m_texture_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        copy_buffer_to_image(staging_buffer, m_texture_image, static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height));
+        transition_image_layout(m_texture_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         vkDestroyBuffer(m_device, staging_buffer, nullptr);
         vkFreeMemory(m_device, staging_buffer_memory, nullptr);
     }
@@ -1292,7 +1298,7 @@ namespace renderer
 
     }
 
-    void Renderer::transition_image_layout(VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout) {
+    void Renderer::transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout) {
         auto command_buffer = begin_single_time_commands();
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -1334,6 +1340,7 @@ namespace renderer
             0, nullptr,
             1, &barrier
         );
+
         end_single_time_commands(command_buffer);
     }
 
@@ -1407,7 +1414,6 @@ namespace renderer
 
 
         this->cleanup_swap_chain();
-
         vkDestroySampler(m_device, m_texture_sampler, nullptr);
         vkDestroyImageView(m_device, m_texture_image_view, nullptr);
         vkDestroyImage(m_device, m_texture_image, nullptr);
@@ -1415,6 +1421,7 @@ namespace renderer
         vkDestroyPipeline(m_device, m_pipeline, nullptr);
         vkDestroyPipelineLayout(m_device, m_pipeline_layout, nullptr);
         vkDestroyRenderPass(m_device, m_render_pass, nullptr);
+        stbi_image_free(m_pixels);
 
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(m_device, m_image_available_semaphores[i], nullptr);
