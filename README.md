@@ -1,3 +1,1 @@
-# vulkan-renderer
-
-following vulkan-tutorial.com
+# Ray Tracing
