@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (WIN32)
 else()
-    add_compile_options(-Wall -Wextra -Wpedantic -Wunused -O3)
+    add_compile_options(-Wall -Wextra -Wpedantic -Wunused -O3 -fno-exceptions -std=c++20)
     add_link_options(-fuse-ld=lld)
 endif()
 
@@ -31,5 +31,13 @@ add_executable(renderer
     src/window/window.cpp
 )
 
+add_executable(tests
+    src/linear_algebra/tests.cpp
+)
+
+
 target_include_directories(renderer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src) 
-target_link_libraries(renderer fmt::fmt glfw glm::glm Catch2::Catch2 vulkan stb::stb)
+target_link_libraries(renderer fmt::fmt glfw glm::glm vulkan stb::stb)
+
+target_include_directories(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src) 
+target_link_libraries(tests Catch2::Catch2WithMain)
