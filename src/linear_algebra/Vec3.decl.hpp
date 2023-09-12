@@ -13,7 +13,7 @@ struct Vec3 {
     T x;
     T y;
     T z;
-
+    Vec3(): x(static_cast<T>(0)), y(static_cast<T>(0)), z(static_cast<T>(0)) {}
     Vec3(T x, T y, T z);
 
     T dot(const Vec3& rhs) const;
