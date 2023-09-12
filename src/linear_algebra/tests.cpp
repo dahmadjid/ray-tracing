@@ -55,7 +55,7 @@ TEST_CASE("VEC3: QUATERNION ROTATION") {
     
     auto axis = Vec3<float>(1., 1., 0.).normalize();
     auto rotated_by_quat = Vec3(a).rotate(
-        Quaternion<float>::angle_axis(to_radians(45), axis.x, axis.y, axis.z)
+        Quaternion<float>::angle_axis(to_radians(45), axis)
     );
     auto rotated_by_matrix = rotation_matrix.vec_mul(a);
 
