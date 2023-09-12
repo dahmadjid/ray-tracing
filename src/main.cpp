@@ -1,5 +1,6 @@
 #include <chrono>
 #include <fmt/core.h>
+#include "ray-tracing/Ray.hpp"
 #include "utils/ScopedTimer.hpp"
 #include "window/window.hpp"
 #include "renderer/renderer.hpp"
@@ -33,5 +34,15 @@ int main() {
 
     RayTracer::ObjectsList list;
     list.add_object(RayTracer::Sphere{});
+    list.add_object(RayTracer::Sphere{});
+    list.add_object(RayTracer::Sphere{});
+    list.add_object(RayTracer::Box{});
+    list.add_object(RayTracer::Box{});
+
+    std::vector<RayTracer::HitPayload> payloads = list.hit(RayTracer::Ray{});
+
+    for (const auto& p: payloads) {
+        fmt::println("{}", p.t);
+    }
 
 }

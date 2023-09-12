@@ -29,6 +29,7 @@ add_executable(renderer
     src/main.cpp
     src/renderer/renderer.cpp 
     src/window/window.cpp
+    src/ray-tracing/objects.cpp
 )
 
 add_executable(tests
