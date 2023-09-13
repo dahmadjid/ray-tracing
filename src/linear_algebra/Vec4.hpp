@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <random>
 
 template<typename T>
 struct Vec4 {
@@ -58,12 +59,13 @@ struct Vec4 {
      * 
      * @return Vec4<uint32_t> 
      */
-    Vec4<uint32_t> floor() {
-        return Vec4<uint32_t>(
-            static_cast<uint32_t>(std::floor(this->w)),
-            static_cast<uint32_t>(std::floor(this->x)),
-            static_cast<uint32_t>(std::floor(this->y)),
-            static_cast<uint32_t>(std::floor(this->z))
+    template<typename U>
+    Vec4<U> floor() {
+        return Vec4<U>(
+            static_cast<U>(std::floor(this->w)),
+            static_cast<U>(std::floor(this->x)),
+            static_cast<U>(std::floor(this->y)),
+            static_cast<U>(std::floor(this->z))
         );
     }
 
@@ -72,12 +74,13 @@ struct Vec4 {
      * 
      * @return Vec4<uint32_t> 
      */
-    Vec4<uint32_t> ceil() {
-        return Vec4<uint32_t>(
-            static_cast<uint32_t>(std::ceil(this->w)),
-            static_cast<uint32_t>(std::ceil(this->x)),
-            static_cast<uint32_t>(std::ceil(this->y)),
-            static_cast<uint32_t>(std::ceil(this->z))
+    template<typename U>
+    Vec4<U> ceil() {
+        return Vec4<U>(
+            static_cast<U>(std::ceil(this->w)),
+            static_cast<U>(std::ceil(this->x)),
+            static_cast<U>(std::ceil(this->y)),
+            static_cast<U>(std::ceil(this->z))
         );
     }
 
@@ -99,6 +102,30 @@ struct Vec4 {
         return Vec4(-this->w, -this->x, -this->y, -this->z);
     }
     
+
+    static Vec4 random() {
+        std::random_device device {};
+        std::mt19937 generator {device()};
+        // mean of 0 and variance of 1
+        std::normal_distribution<double> standard_normal_distribution {0, 1};
+
+        return Vec4<T>(
+            standard_normal_distribution(generator),
+            standard_normal_distribution(generator),
+            standard_normal_distribution(generator),
+            standard_normal_distribution(generator)
+        );
+    }
+
+    template<typename U>
+    Vec4<U> cast() {
+        return Vec4<U>(
+            static_cast<U>(this->w),
+            static_cast<U>(this->x),
+            static_cast<U>(this->y),
+            static_cast<U>(this->z)
+        );
+    }
 };
 
 /**

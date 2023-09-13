@@ -23,13 +23,13 @@ int main() {
     Camera<800, 600> cam(45);
     Scene<800, 600> scene(cam);
 
+
+    scene.add_object(Sphere(Vec3<float>(0., 0., 0.), 0.5f, Vec4<uint8_t>(255, 0, 0, 255)));
+    scene.add_object(Sphere(Vec3<float>(0., -100.5, 0.), 100.f, Vec4<uint8_t>(0, 255, 0, 255)));
    
     while(!w.should_close()) {
         r.update_image(reinterpret_cast<uint8_t*>(scene.render().data()));
-        {
-            ScopedTimer<std::chrono::microseconds, false> s("");
-            r.draw_frame();
-        }
+        r.draw_frame();
         glfwPollEvents();
     }
     

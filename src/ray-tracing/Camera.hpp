@@ -2,7 +2,7 @@
 
 #include "linear_algebra/Vec3.hpp"
 #include "linear_algebra/Quaternion.hpp"
-#include "utils/MathUtils.h"
+#include "utils/MathUtils.hpp"
 #include <array>
 #include <cstdint>
 #include <ranges>
@@ -80,5 +80,9 @@ public:
         m_z_axis.rotate(Quaternion<float>::angle_axis(-pitch_delta_radians, right_direction).cross(Quaternion<float>::angle_axis(-yaw_delta_radians, up_dir)).normalize());
     }
 
+
+    Vec3<float> position() const {
+        return m_position;
+    }
 };
 }

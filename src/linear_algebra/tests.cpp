@@ -11,7 +11,7 @@
 #include "linear_algebra/Quaternion.hpp"
 #include <format>
 #include <iostream>
-#include "utils/MathUtils.h"
+#include "utils/MathUtils.hpp"
 
 
 TEST_CASE("VEC3: DOT") {
