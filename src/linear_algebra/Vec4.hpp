@@ -10,7 +10,7 @@ struct Vec4 {
     T y;
     T z;
     
-
+    Vec4(): w(0), x(0), y(0), z(0) {}
     Vec4(T w, T x, T y, T z): w(w), x(x), y(y), z(z) {}
 
     T dot(const Vec4& rhs) {

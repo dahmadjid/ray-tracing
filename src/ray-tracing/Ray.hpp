@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "linear_algebra/Vec3.decl.hpp"
+#include "linear_algebra/Vec3.hpp"
 
 namespace RayTracer {
 

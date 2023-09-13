@@ -11,10 +11,8 @@
 #include "linear_algebra/Quaternion.hpp"
 #include <format>
 #include <iostream>
+#include "utils/MathUtils.h"
 
-static inline constexpr float to_radians(float degrees) {
-    return degrees * (std::numbers::pi / 180);
-}
 
 TEST_CASE("VEC3: DOT") {
     auto a = Vec3(1.5, 2.5, 10.);
@@ -55,7 +53,7 @@ TEST_CASE("VEC3: QUATERNION ROTATION") {
     
     auto axis = Vec3<float>(1., 1., 0.).normalize();
     auto rotated_by_quat = Vec3(a).rotate(
-        Quaternion<float>::angle_axis(to_radians(45), axis)
+        Quaternion<float>::angle_axis(to_radians(45.0f), axis)
     );
     auto rotated_by_matrix = rotation_matrix.vec_mul(a);
 

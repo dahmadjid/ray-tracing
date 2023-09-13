@@ -1,4 +1,5 @@
-#include "linear_algebra/Vec3.decl.hpp"
+#pragma once
+
 #include "linear_algebra/Vec3.hpp"
 #include "ray-tracing/Ray.hpp"
 #include "utils/SameAsAny.hpp"
