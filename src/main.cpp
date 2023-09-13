@@ -1,5 +1,6 @@
 #include <chrono>
 #include <fmt/core.h>
+#include "linear_algebra/Vec3.decl.hpp"
 #include "ray-tracing/Ray.hpp"
 #include "utils/ScopedTimer.hpp"
 #include "window/window.hpp"
@@ -33,16 +34,14 @@ int main() {
     // r.wait_for_device_idle();
 
     RayTracer::ObjectsList list;
-    list.add_object(RayTracer::Sphere{});
-    list.add_object(RayTracer::Sphere{});
-    list.add_object(RayTracer::Sphere{});
-    list.add_object(RayTracer::Box{});
-    list.add_object(RayTracer::Box{});
+    list.add_object(RayTracer::Sphere(Vec3(0.5f, 0.5f, 0.5f), 1., Vec3(0.5f, 0.5f, 0.5f)));
+    list.add_object(RayTracer::Sphere(Vec3(0.5f, 0.5f, 0.5f), 1., Vec3(0.5f, 0.5f, 0.5f)));
+    list.add_object(RayTracer::Sphere(Vec3(0.5f, 0.5f, 0.5f), 1., Vec3(0.5f, 0.5f, 0.5f)));
 
-    std::vector<RayTracer::HitPayload> payloads = list.hit(RayTracer::Ray{});
+    auto payloads = list.hit(RayTracer::Ray{.origin=Vec3(1.0f, 1.0f, 1.0f), .direction=Vec3(1.0f, 1.0f, 1.0f)}, 0.00001 , 5.2);
 
     for (const auto& p: payloads) {
-        fmt::println("{}", p.t);
+        fmt::println("{}", p->t);
     }
 
 }
