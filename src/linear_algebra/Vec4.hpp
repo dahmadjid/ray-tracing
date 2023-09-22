@@ -3,6 +3,10 @@
 #include <cmath>
 #include <cstdint>
 #include <random>
+#include <fmt/format.h>
+#include "linear_algebra/Vec3.decl.hpp"
+#include "linear_algebra/Vec3.hpp"
+#include "utils/MathUtils.hpp"
 
 template<typename T>
 struct Vec4 {
@@ -13,6 +17,8 @@ struct Vec4 {
     
     Vec4(): w(0), x(0), y(0), z(0) {}
     Vec4(T w, T x, T y, T z): w(w), x(x), y(y), z(z) {}
+    Vec4(T w, const Vec3<T>& v): w(w), x(v.x), y(v.y), z(v.z) {}
+    Vec4(const Vec3<T>& v, T z): w(v.x), x(v.y), y(v.z), z(z) {}
 
     T dot(const Vec4& rhs) {
         return this->w * rhs.w + this->x * rhs.x + this->y * rhs.y + this->z * rhs.z;
@@ -103,17 +109,12 @@ struct Vec4 {
     }
     
 
-    static Vec4 random() {
-        std::random_device device {};
-        std::mt19937 generator {device()};
-        // mean of 0 and variance of 1
-        std::normal_distribution<double> standard_normal_distribution {0, 1};
-
-        return Vec4<T>(
-            standard_normal_distribution(generator),
-            standard_normal_distribution(generator),
-            standard_normal_distribution(generator),
-            standard_normal_distribution(generator)
+    static Vec4<float> random(uint32_t& seed) {
+        return Vec4<float>(
+            rand_float(seed) * 2 - 1,
+            rand_float(seed) * 2 - 1,
+            rand_float(seed) * 2 - 1,
+            rand_float(seed) * 2 - 1
         );
     }
 
@@ -187,3 +188,13 @@ template<typename T>
 static bool operator==(const Vec4<T>& lhs, const Vec4<T>& rhs) {
     return lhs.w == rhs.w && lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
 }
+
+
+
+template <typename T>
+struct fmt::formatter<Vec4<T>> : formatter<std::string> {
+  auto format(const Vec4<T>& vec, fmt::format_context& ctx) const {
+    std::string out = fmt::format("Vec4({}, {}, {}, {})", vec.w, vec.x, vec.y, vec.z);
+    return formatter<std::string>::format(out, ctx);
+  }
+};

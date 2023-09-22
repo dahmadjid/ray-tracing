@@ -7,16 +7,20 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (WIN32)
 else()
-    add_compile_options(-Wall -Wextra -Wpedantic -Wunused -O3 -fno-exceptions -std=c++20 -fsanitize=address)
-    add_link_options(-fuse-ld=lld -fsanitize=address)
+    add_compile_options(-Wall -Wextra -Wpedantic -Wunused -O3 -fno-exceptions -std=c++20 
+    # -fsanitize=address
+)
+    add_link_options(-fuse-ld=lld 
+    # -fsanitize=address
+)
 endif()
 
 find_package(Vulkan REQUIRED)
+find_package(VulkanHeaders REQUIRED)
 find_package(fmt REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
-find_package(Catch2)
-find_package(stb)
+find_package(Catch2 REQUIRED)
 
 execute_process(
     COMMAND bash shaders/compile_shaders.sh
@@ -30,15 +34,17 @@ add_executable(renderer
     src/renderer/renderer.cpp 
     src/window/window.cpp
     src/ray-tracing/objects.cpp
+    src/utils/MathUtils.cpp
 )
 
 add_executable(tests
     src/linear_algebra/tests.cpp
+    src/utils/MathUtils.cpp
 )
 
 
 target_include_directories(renderer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src) 
-target_link_libraries(renderer fmt::fmt glfw glm::glm vulkan stb::stb)
+target_link_libraries(renderer fmt::fmt glfw glm::glm vulkan vulkan-headers::vulkan-headers)
 
 target_include_directories(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src) 
-target_link_libraries(tests Catch2::Catch2WithMain)
+target_link_libraries(tests Catch2::Catch2WithMain fmt::fmt)

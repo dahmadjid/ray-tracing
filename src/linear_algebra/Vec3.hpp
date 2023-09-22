@@ -3,8 +3,11 @@
 #include <cmath>
 #include <cstdint>
 #include "linear_algebra/Vec3.decl.hpp"
+#include "utils/MathUtils.hpp"
 #include <format>
 #include <iostream>
+#include <fmt/format.h>
+
 
 template<typename T>
 Vec3<T>::Vec3(T x, T y, T z): x(x), y(y), z(z) {}
@@ -92,4 +95,22 @@ Vec3<T>& Vec3<T>::rotate(const Quaternion<T>& rotation_quaternion) {
     this->z = result.z;
     return *this;
 }
+
+template <typename T>
+struct fmt::formatter<Vec3<T>> : formatter<std::string> {
+  auto format(const Vec3<T>& vec, fmt::format_context& ctx) const {
+    std::string out = fmt::format("Vec3({}, {}, {})", vec.x, vec.y, vec.z);
+    return formatter<std::string>::format(out, ctx);
+  }
+};
+
+template<typename T>
+Vec3<float> Vec3<T>::random(uint32_t& seed) {
+    return Vec3<float>(
+        rand_float(seed) * 2 - 1,
+        rand_float(seed) * 2 - 1,
+        rand_float(seed) * 2 - 1
+    );
+}
+
 

@@ -78,6 +78,8 @@ struct Vec3 {
      */
     Vec3<T>& rotate(const Quaternion<T>& rotation_quaternion);
 
+
+    static Vec3<float> random(uint32_t& seed);
 };
 
 /**

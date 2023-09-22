@@ -1,15 +1,16 @@
 #include "ray-tracing/objects.hpp"
 #include "ray-tracing/Ray.hpp"
 #include <cmath>
+#include <fmt/core.h>
 
 
 namespace RayTracer {
-    std::optional<HitPayload> Sphere::hit(const Ray& ray, int t_min, int t_max) {
+    std::optional<HitPayload> Sphere::hit(const Ray& ray, int t_min, int t_max) const {
         auto origin = ray.origin - this->position();
         auto a = ray.direction.dot(ray.direction);
-        auto b = 2.0 * origin.dot(ray.direction);
+        auto b = 2 * origin.dot(ray.direction);
         auto c = origin.dot(origin) - this->m_radius*this->m_radius;
-        auto discriminant =  b * b - 4. * a * c;
+        auto discriminant =  b * b - 4 * a * c;
         if (discriminant < 0.0) {
             return {};
         } else {
@@ -21,12 +22,28 @@ namespace RayTracer {
                     return {};
                 } 
             }
+
             auto hit_point = origin + Vec3(ray.direction).scale(root);
-            auto normal = (hit_point - this->position()).normalize();
+            auto normal = (hit_point - this->m_position).normalize();
+
             if (ray.direction.dot(normal) > 0.0) {
-                return HitPayload{.hit_position=hit_point, .normal=-normal, .t=root, .front_face=false,  .object_color=this->object_color()};
+                return HitPayload{
+                    .hit_position=hit_point, 
+                    .normal=-normal, 
+                    .t=root, 
+                    .front_face=false,  
+                    .object_color=this->object_color()
+                };
+
             } else {
-                return HitPayload{.hit_position=hit_point, .normal=normal , .t=root, .front_face=true ,  .object_color=this->object_color()};
+                return HitPayload{
+                    .hit_position=hit_point, 
+                    .normal=normal , 
+                    .t=root, 
+                    .front_face=true ,  
+                    .object_color=this->object_color()
+                };
+                
             }
         }
     }
