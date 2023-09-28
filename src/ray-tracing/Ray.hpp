@@ -6,8 +6,8 @@
 namespace RayTracer {
 
 struct Ray {
-    Vec3<float> origin;
-    Vec3<float> direction;
+    Vec3<f32> origin;
+    Vec3<f32> direction;
 };
 
 }

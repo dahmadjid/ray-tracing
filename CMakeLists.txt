@@ -7,12 +7,15 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (WIN32)
 else()
-    add_compile_options(-Wall -Wextra -Wpedantic -Wunused -O3 -fno-exceptions -std=c++20 
-    # -fsanitize=address
-)
-    add_link_options(-fuse-ld=lld 
-    # -fsanitize=address
-)
+    if (CMAKE_BUILD_TYPE STREQUAL "Release") 
+        add_compile_options(-Wall -Wextra -Wpedantic -Wunused -O3 -std=c++20)
+        add_link_options(-fuse-ld=lld) 
+    else()
+        message("${CMAKE_BUILD_TYPE}")
+        add_compile_options(-Wall -Wextra -Wpedantic -Wunused -O3 -std=c++20 -fsanitize=address)
+        add_link_options(-fuse-ld=lld -fsanitize=address) 
+
+    endif()
 endif()
 
 find_package(Vulkan REQUIRED)

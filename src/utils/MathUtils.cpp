@@ -2,14 +2,14 @@
 #include <limits>
 
 
-uint32_t pcg_hash(uint32_t seed) {
-    uint32_t state = seed * 747796405u + 2891336453u;
-    uint32_t word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+u32 pcg_hash(u32 seed) {
+    u32 state = seed * 747796405u + 2891336453u;
+    u32 word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
     return (word >> 22u) ^ word;
 }
 
 
-float rand_float(uint32_t& seed) {
+float rand_float(u32& seed) {
     seed = pcg_hash(seed);
-    return static_cast<float>(seed) / static_cast<float>(std::numeric_limits<uint32_t>::max());
+    return static_cast<float>(seed) / static_cast<float>(std::numeric_limits<u32>::max());
 }

@@ -36,7 +36,8 @@ struct Vec3 {
      * @param factor 
      * @return Vec3& 
      */
-    Vec3& scale(T factor);
+    template<typename U>
+    Vec3& scale(U factor);
 
     /**
      * @brief normalizes in place, returns reference to the same Vec3
@@ -65,7 +66,8 @@ struct Vec3 {
      * @param factor 
      * @return Vec3& 
      */
-    Vec3& shift(T factor);
+    template<typename U>
+    Vec3& shift(U factor);
     
 
     Vec3 operator-() const;
@@ -80,6 +82,35 @@ struct Vec3 {
 
 
     static Vec3<float> random(uint32_t& seed);
+
+
+    /**
+    * @brief Element wise addition
+    * @param rhs 
+    */
+    void operator+=(const Vec3<T>& rhs);
+
+
+    /**
+    * @brief Element wise subtraction
+    * @param rhs 
+    */
+    void operator-=(const Vec3<T>& rhs);
+
+
+    /**
+    * @brief Element wise multiplication
+    * @param rhs 
+    */
+    void operator*=(const Vec3<T>& rhs);
+
+
+    /**
+    * @brief Element wise division
+    * @param rhs 
+    */
+    void operator/=(const Vec3<T>& rhs);
+
 };
 
 /**

@@ -38,7 +38,8 @@ auto Vec3<T>::length() const {
 }
 
 template<typename T>
-Vec3<T>& Vec3<T>::scale(T factor) {
+template<typename U>
+Vec3<T>& Vec3<T>::scale(U factor) {
     this->x *= factor;
     this->y *= factor;
     this->z *= factor;
@@ -73,7 +74,8 @@ Vec3<uint32_t> Vec3<T>::ceil() const {
 }
 
 template<typename T>
-Vec3<T>& Vec3<T>::shift(T factor) {
+template<typename U>
+Vec3<T>& Vec3<T>::shift(U factor) {
     this->x += factor;
     this->y += factor;
     this->z += factor;
@@ -114,3 +116,31 @@ Vec3<float> Vec3<T>::random(uint32_t& seed) {
 }
 
 
+
+template<typename T>
+void Vec3<T>::operator+=(const Vec3<T>& rhs) {
+    this->x += rhs.x; 
+    this->y += rhs.y; 
+    this->z += rhs.z;
+}
+
+template<typename T>
+void Vec3<T>::operator-=(const Vec3<T>& rhs) {
+    this->x -= rhs.x; 
+    this->y -= rhs.y; 
+    this->z -= rhs.z;
+}
+
+template<typename T>
+void Vec3<T>::operator*=(const Vec3<T>& rhs) {
+    this->x *= rhs.x; 
+    this->y *= rhs.y; 
+    this->z *= rhs.z;
+}
+
+template<typename T>
+void Vec3<T>::operator/=(const Vec3<T>& rhs) {
+    this->x /= rhs.x; 
+    this->y /= rhs.y; 
+    this->z /= rhs.z;
+}

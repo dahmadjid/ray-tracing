@@ -8,30 +8,33 @@
 #include <ranges>
 #include <sys/types.h>
 #include <vector>
-
+#include <memory>
 
 namespace RayTracer {
 
 
-template<uint32_t window_width, uint32_t window_height>
+template<u32 window_width, u32 window_height>
 class Camera {
-    float m_viewport_height = 0;
-    float m_viewport_width = 0;
-    Vec3<float> m_z_axis;
-    Vec3<float> m_position;
+    f32 m_viewport_height = 0;
+    f32 m_viewport_width = 0;
+    Vec3<f32> m_z_axis;
+    Vec3<f32> m_position;
 
 
 
 public:
-    std::array<Vec3<float>, window_height * window_width> ray_directions;
-    Camera(float vfov)
-    : m_position(Vec3(0.f, 1.f, 6.f)) {
+    std::unique_ptr<std::array<Vec3<f32>, window_height * window_width>> ray_directions;
+    Camera(f32 vfov)
+    : m_position(Vec3(0.f, 1.f, 5.f)) {
         auto theta = to_radians(vfov);
         auto h = std::tan(theta/2.0);
         auto viewport_height =  1.0 * h;
         auto viewport_width =  viewport_height * window_width / window_height;
 
         auto z_axis = Vec3(0.0f, 0.0f, -1.0f);
+        ray_directions = std::make_unique<std::array<Vec3<f32>, window_height * window_width>>();
+
+
         m_viewport_height = viewport_height;
         m_viewport_width = viewport_width;
         m_z_axis = z_axis;
@@ -45,37 +48,41 @@ public:
         auto right_direction = m_z_axis.cross(up).normalize().scale(m_viewport_width/2.0);
         auto up_direction = m_z_axis.cross(right_direction).normalize().scale(m_viewport_height/2.0);
         for (int y = window_height - 1; y >= 0; y--) {
-            auto v = static_cast<float>(y) / static_cast<float>(window_height) * 2.0 - 1.0;
-            for (uint32_t x = 0; x < window_width; x++) {
-                auto u = static_cast<float>(x) / static_cast<float>(window_width) * 2.0 - 1.0;
-                this->ray_directions[x + y * window_width] = (m_z_axis + Vec3(right_direction).scale(u) + Vec3(up_direction).scale(v));
+            auto v = static_cast<f32>(y) / static_cast<f32>(window_height) * 2.0 - 1.0;
+            for (u32 x = 0; x < window_width; x++) {
+                auto u = static_cast<f32>(x) / static_cast<f32>(window_width) * 2.0 - 1.0;
+                this->ray_directions->operator[](x + y * window_width) = (m_z_axis + Vec3(right_direction).scale(u) + Vec3(up_direction).scale(v));
             }
         }
     }
 
 
-    void update_x_position(float x) {
+    void update_x_position(f32 x) {
         auto up_dir = Vec3(0.0f, 1.0f, 0.0f);
         m_position = m_position + m_z_axis.cross(up_dir).scale(x);
     }
 
-    void update_y_position(float y) {
+    void update_y_position(f32 y) {
         m_position.y += y;
     }
     
-    void update_z_position(float z) {
+    void update_z_position(f32 z) {
         m_position = m_position + Vec3(m_z_axis).scale(z);
     }
 
-    void rotate(float pitch_delta_radians, float yaw_delta_radians) {
+    void rotate(f32 pitch_delta_radians, f32 yaw_delta_radians) {
         auto up_dir = Vec3(0.0f, 1.0f, 0.0f);
         auto right_direction = m_z_axis.cross(up_dir).normalize();
-        m_z_axis.rotate(Quaternion<float>::angle_axis(-pitch_delta_radians, right_direction).cross(Quaternion<float>::angle_axis(-yaw_delta_radians, up_dir)).normalize());
+        m_z_axis.rotate(Quaternion<f32>::angle_axis(-pitch_delta_radians, right_direction).cross(Quaternion<f32>::angle_axis(-yaw_delta_radians, up_dir)).normalize());
     }
 
 
-    Vec3<float> position() const {
+    Vec3<f32> position() const {
         return m_position;
+    }
+
+    Vec3<f32> get_ray(u32 x, u32 y) {
+        return this->ray_directions->operator[](x + y * window_width);
     }
 };
 }

@@ -5,17 +5,21 @@
 #include "ray-tracing/Camera.hpp"
 #include "ray-tracing/objects.hpp"
 #include "ray-tracing/Ray.hpp"
-#include <cstdint>
+#include <exception>
 #include <fmt/core.h>
+#include <functional>
 #include <limits>
 #include <optional>
+#include <system_error>
+#include <thread>
 #include <utility>
 #include <array>
 #include <numbers>
+#include "utils/BS_thread_pool.hpp"
 
 namespace RayTracer {
 
-template<uint32_t window_width, uint32_t window_height>
+template<u32 window_width, u32 window_height>
 class Scene {
     ObjectsList m_objects;
     Camera<window_width, window_height>& m_camera;
@@ -28,56 +32,64 @@ public:
     Scene(Scene&) = delete;
     Scene& operator=(Scene&) = delete;
 
+
+
     template<typename T>
     void add_object(T&& hittable_object) {
         m_objects.add_object(std::forward<T>(hittable_object));
     }
 
-    void render(std::array<Vec4<uint8_t>, window_height * window_width>& image) {
-        for (int y = window_height - 1; y >= 0; y--) {
-            for (uint32_t x = 0; x < window_width; x++) {
-                Ray ray = Ray{.origin=m_camera.position(), .direction=m_camera.ray_directions[x + y * window_width]};
+    void per_pixel(u32 x, u32 y, u32 max_bounces, std::array<Vec4<u8>, window_height * window_width>& image) const {
+        Ray ray = Ray{.origin=m_camera.position(), .direction=m_camera.get_ray(x, y)};
 
-                auto total = Vec4<float>(0, 0, 0, 0);
-                auto hit_count = 0;
-                auto multiplier = 0.7f;
-                uint32_t seed = x + y * window_width;
-                int bounces = 10;
-                for (int bounce = bounces; bounce > 0; bounce--) {
-                    std::optional<HitPayload> payload = this->m_objects.hit(ray, 0.01f, std::numeric_limits<float>::max());
-                    if (payload.has_value()) {
-                        seed += bounce;
-                        
-                        ray.origin = payload->hit_position + Vec3(payload->normal).scale(0.005);
-                        auto rand_vector = Vec3<float>::random(seed).normalize();
-                        if (rand_vector.dot(payload->normal) < 0.0f) {
-                            rand_vector = -rand_vector;
-                        }
-                        ray.direction = rand_vector;
-
-                        hit_count += 1;
-                        multiplier *= 0.7;
-                        
-                    } else {
-                        auto a = 0.5 * (ray.direction.y + 1.0);
-                        total = total + Vec4<float>(1.0, 1.0, 1.0, 1.0).scale(1.0 - a) + Vec4<float>(0.5, 0.7, 1.0, 1.0).scale(a);
-                        total = total.scale(multiplier);
-                        break;
-                    }
-
+        auto total = Vec4<u32>(0, 0, 0, 0);
+        auto hit_count = 0;
+        auto multiplier = 1.0f;
+        u32 seed = x + y * window_width;
+        for (i32 bounce = max_bounces; bounce > 0; bounce--) {
+            std::optional<HitPayload> payload = this->m_objects.hit(ray, 0.01f, std::numeric_limits<f32>::max());
+            if (payload.has_value()) {
+                seed += bounce;
+                
+                ray.origin = payload->hit_position + Vec3(payload->normal).scale(0.005);
+                auto rand_vector = Vec3<f32>::random(seed).normalize();
+                if (rand_vector.dot(payload->normal) < 0.0f) {
+                    rand_vector = -rand_vector;
                 }
-                if (hit_count > 0) {
-                    image[x + y * window_width] = total.scale(1. / static_cast<float>(hit_count)).scale(255.99).floor<uint8_t>();
+                ray.direction = rand_vector;
 
+                hit_count += 1;
+                total += payload->object_color.scale(multiplier).cast<u32>();
+                multiplier *= 0.5;
+            } else {
+                hit_count += 1;
+                if (hit_count != 1) {
+                    multiplier *= 0.3;
                 } else {
-                    auto a = 0.5 * (ray.direction.y + 1.0);
-
-                    total = Vec4<float>(1.0, 1.0, 1.0, 1.0).scale(1.0 - a) + Vec4<float>(0.5, 0.7, 1.0, 1.0).scale(a);
-                    image[x + y * window_width] = total.scale(255.99).floor<uint8_t>();
+                    multiplier = 1.f;
                 }
-
+                auto a = 0.5 * (ray.direction.y + 1.0);
+                total += (Vec4<u32>(255, 255, 255, 255).scale(1.0 - a) + Vec4<u32>(127, 0.7 * 255, 255, 255).scale(a)).scale(multiplier);
+                break;
             }
+
         }
+        image[x + y * window_width] = total.scale(1.f / (f32)hit_count).cast<u8>();
+    }
+
+
+    void render(std::array<Vec4<u8>, window_height * window_width>& image) {
+
+        BS::thread_pool thread_pool(8);
+        
+        for (i32 y = window_height - 1; y >= 0; y--) {
+            thread_pool.push_loop(window_width, [this, y, &image](const int a, const int b) {
+                for (u32 x = a; x < b; x++) {
+                    per_pixel(x, y, 10, image);
+                }
+            });
+        }
+        thread_pool.wait_for_tasks();
 
     }
 

@@ -38,7 +38,8 @@ struct Vec4 {
      * @param factor 
      * @return Vec4& 
      */
-    Vec4& scale(T factor) {
+    template<typename U>
+    Vec4& scale(U factor) {
         this->w *= factor;
         this->x *= factor;
         this->y *= factor;
@@ -65,13 +66,13 @@ struct Vec4 {
      * 
      * @return Vec4<uint32_t> 
      */
-    template<typename U>
-    Vec4<U> floor() {
-        return Vec4<U>(
-            static_cast<U>(std::floor(this->w)),
-            static_cast<U>(std::floor(this->x)),
-            static_cast<U>(std::floor(this->y)),
-            static_cast<U>(std::floor(this->z))
+    template<typename CastType>
+    Vec4<CastType> floor() {
+        return Vec4<CastType>(
+            static_cast<CastType>(std::floor(this->w)),
+            static_cast<CastType>(std::floor(this->x)),
+            static_cast<CastType>(std::floor(this->y)),
+            static_cast<CastType>(std::floor(this->z))
         );
     }
 
@@ -80,13 +81,13 @@ struct Vec4 {
      * 
      * @return Vec4<uint32_t> 
      */
-    template<typename U>
-    Vec4<U> ceil() {
-        return Vec4<U>(
-            static_cast<U>(std::ceil(this->w)),
-            static_cast<U>(std::ceil(this->x)),
-            static_cast<U>(std::ceil(this->y)),
-            static_cast<U>(std::ceil(this->z))
+    template<typename CastType>
+    Vec4<CastType> ceil() {
+        return Vec4<CastType>(
+            static_cast<CastType>(std::ceil(this->w)),
+            static_cast<CastType>(std::ceil(this->x)),
+            static_cast<CastType>(std::ceil(this->y)),
+            static_cast<CastType>(std::ceil(this->z))
         );
     }
 
@@ -96,7 +97,8 @@ struct Vec4 {
      * @param factor 
      * @return Vec4& 
      */
-    Vec4& shift(T factor) {
+    template<typename U>
+    Vec4& shift(U factor) {
         this->w += factor;
         this->x += factor;
         this->y += factor;
@@ -126,6 +128,53 @@ struct Vec4 {
             static_cast<U>(this->y),
             static_cast<U>(this->z)
         );
+    }
+
+    /**
+    * @brief Element wise addition
+    * @param rhs 
+    */
+    void operator+=(const Vec4<T>& rhs) {
+        this->w += rhs.w; 
+        this->x += rhs.x; 
+        this->y += rhs.y; 
+        this->z += rhs.z;
+    }
+
+
+    /**
+    * @brief Element wise subtraction
+    * @param rhs 
+    */
+    void operator-=(const Vec4<T>& rhs) {
+        this->w -= rhs.w; 
+        this->x -= rhs.x; 
+        this->y -= rhs.y; 
+        this->z -= rhs.z;
+    }
+
+
+    /**
+    * @brief Element wise multiplication
+    * @param rhs 
+    */
+    void operator*=(const Vec4<T>& rhs) {
+        this->w *= rhs.w; 
+        this->x *= rhs.x; 
+        this->y *= rhs.y; 
+        this->z *= rhs.z;
+    }
+
+
+    /**
+    * @brief Element wise division
+    * @param rhs 
+    */
+    void operator/=(const Vec4<T>& rhs) {
+        this->w /= rhs.w; 
+        this->x /= rhs.x; 
+        this->y /= rhs.y; 
+        this->z /= rhs.z;
     }
 };
 

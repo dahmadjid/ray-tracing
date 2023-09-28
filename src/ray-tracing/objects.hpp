@@ -6,25 +6,24 @@
 #include "utils/SameAsAny.hpp"
 #include <algorithm>
 #include <concepts>
-#include <cstdint>
 #include <optional>
 #include <vector>
 
 namespace RayTracer {
     struct HitPayload {
-        Vec3<float> hit_position;
-        Vec3<float> normal;
-        float t = 0;
+        Vec3<f32> hit_position;
+        Vec3<f32> normal;
+        f32 t = 0;
         bool front_face = false;
-        Vec4<uint8_t> object_color;
+        Vec4<u8> object_color;
     };
 
     template<typename T>
-    concept Hittable = requires (T& object, const Vec3<float>& position, const Ray& ray, float t_min, float t_max){
-        { object.position() } -> std::same_as<Vec3<float>>;
+    concept Hittable = requires (T& object, const Vec3<f32>& position, const Ray& ray, f32 t_min, f32 t_max){
+        { object.position() } -> std::same_as<Vec3<f32>>;
         { object.set_position(position) } -> std::same_as<void>;
         { object.hit(ray, t_min, t_max) } -> std::same_as<std::optional<HitPayload>>;
-        { object.object_color() } -> std::same_as<Vec4<uint8_t>>;
+        { object.object_color() } -> std::same_as<Vec4<u8>>;
     };
     
 
@@ -36,7 +35,7 @@ namespace RayTracer {
             std::get<std::vector<T>>(m_hittable_objects).emplace_back(hittable_object);
         }
 
-        std::optional<HitPayload> hit(const Ray& ray, float t_min, float t_max) const {
+        std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const {
             std::vector<std::optional<HitPayload>> payloads;
             
             payloads.reserve((std::get<std::vector<Ts>>(m_hittable_objects).size() + ...));
@@ -71,28 +70,28 @@ namespace RayTracer {
 
     class Sphere {
     public:
-        std::optional<HitPayload> hit(const Ray& ray, int t_min, int t_max) const;
-        Vec3<float> position() const { return m_position; }
-        void set_position(const Vec3<float>& pos) { m_position = pos; }
-        Vec4<uint8_t> object_color() const { return m_object_color; }
-        Sphere(const Vec3<float>& position, float radius, const Vec4<uint8_t>& object_color): m_position(position), m_radius(radius), m_object_color(object_color) {}
+        std::optional<HitPayload> hit(const Ray& ray, i32 t_min, i32 t_max) const;
+        Vec3<f32> position() const { return m_position; }
+        void set_position(const Vec3<f32>& pos) { m_position = pos; }
+        Vec4<u8> object_color() const { return m_object_color; }
+        Sphere(const Vec3<f32>& position, f32 radius, const Vec4<u8>& object_color): m_position(position), m_radius(radius), m_object_color(object_color) {}
     private:
-        Vec3<float> m_position;    
-        float m_radius = 0;
-        Vec4<uint8_t> m_object_color;
+        Vec3<f32> m_position;    
+        f32 m_radius = 0;
+        Vec4<u8> m_object_color;
     };
 
     class Box {
     public:
-        // std::optional<HitPayload> hit(const Ray& ray, int t_min, int t_max) const;
-        Vec3<float> position() const { return m_position; }
-        void set_position(const Vec3<float>& pos) { m_position = pos; }
-        Vec4<uint8_t> object_color() const { return m_object_color; }
-        Box(const Vec3<float>& position, float radius, const Vec4<uint8_t>& object_color): m_position(position), m_radius(radius), m_object_color(object_color) {}
+        // std::optional<HitPayload> hit(const Ray& ray, i32 t_min, i32 t_max) const;
+        Vec3<f32> position() const { return m_position; }
+        void set_position(const Vec3<f32>& pos) { m_position = pos; }
+        Vec4<u8> object_color() const { return m_object_color; }
+        Box(const Vec3<f32>& position, f32 radius, const Vec4<u8>& object_color): m_position(position), m_radius(radius), m_object_color(object_color) {}
     private:
-        Vec3<float> m_position;    
-        float m_radius = 0;
-        Vec4<uint8_t> m_object_color;
+        Vec3<f32> m_position;    
+        f32 m_radius = 0;
+        Vec4<u8> m_object_color;
     };
 
 
