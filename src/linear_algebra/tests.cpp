@@ -282,3 +282,11 @@ TEST_CASE("MAT3: inverse") {
     mat3 a_glm(1.123, 2.12, 3.45, 4.32, 5.997, 6.12, 72.12, 8.23, 9.123);
     mat3_equal(a.inverse().value(), glm::inverse(a_glm));
 }
+
+
+TEST_CASE("MAT3: inverse") {
+    Mat3<f32> a{.data={1.123, 2.12, 3.45, 4.32, 5.997, 6.12, 72.12, 8.23, 9.123}};
+    
+    mat3 a_glm(1.123, 2.12, 3.45, 4.32, 5.997, 6.12, 72.12, 8.23, 9.123);
+    mat3_equal(a.inverse().value(), glm::inverse(a_glm));
+}
