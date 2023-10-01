@@ -14,25 +14,23 @@ struct Mat3 {
 
     Mat3 mat_mul(const Mat3<T>& rhs) const {
         return Mat3({
-            this->get(0, 0) * rhs.get(0, 0) + this->get(0, 1) * rhs.get(1, 0) + this->get(0, 2) * rhs.get(2, 0),
-            this->get(0, 0) * rhs.get(0, 1) + this->get(0, 1) * rhs.get(1, 1) + this->get(0, 2) * rhs.get(2, 1),
-            this->get(0, 0) * rhs.get(0, 2) + this->get(0, 1) * rhs.get(1, 2) + this->get(0, 2) * rhs.get(2, 2),
-
-            this->get(1, 0) * rhs.get(0, 0) + this->get(1, 1) * rhs.get(1, 0) + this->get(1, 2) * rhs.get(2, 0),
-            this->get(1, 0) * rhs.get(0, 1) + this->get(1, 1) * rhs.get(1, 1) + this->get(1, 2) * rhs.get(2, 1),
-            this->get(1, 0) * rhs.get(0, 2) + this->get(1, 1) * rhs.get(1, 2) + this->get(1, 2) * rhs.get(2, 2),
-        
-            this->get(2, 0) * rhs.get(0, 0) + this->get(2, 1) * rhs.get(1, 0) + this->get(2, 2) * rhs.get(2, 0),
-            this->get(2, 0) * rhs.get(0, 1) + this->get(2, 1) * rhs.get(1, 1) + this->get(2, 2) * rhs.get(2, 1),
-            this->get(2, 0) * rhs.get(0, 2) + this->get(2, 1) * rhs.get(1, 2) + this->get(2, 2) * rhs.get(2, 2)
+            this->get(0, 0) * rhs.get(0, 0) + this->get(1, 0) * rhs.get(0, 1) + this->get(2, 0) * rhs.get(0, 2),
+            this->get(0, 1) * rhs.get(0, 0) + this->get(1, 1) * rhs.get(0, 1) + this->get(2, 1) * rhs.get(0, 2),
+            this->get(0, 2) * rhs.get(0, 0) + this->get(1, 2) * rhs.get(0, 1) + this->get(2, 2) * rhs.get(0, 2),
+            this->get(0, 0) * rhs.get(1, 0) + this->get(1, 0) * rhs.get(1, 1) + this->get(2, 0) * rhs.get(1, 2),
+            this->get(0, 1) * rhs.get(1, 0) + this->get(1, 1) * rhs.get(1, 1) + this->get(2, 1) * rhs.get(1, 2),
+            this->get(0, 2) * rhs.get(1, 0) + this->get(1, 2) * rhs.get(1, 1) + this->get(2, 2) * rhs.get(1, 2),
+            this->get(0, 0) * rhs.get(2, 0) + this->get(1, 0) * rhs.get(2, 1) + this->get(2, 0) * rhs.get(2, 2),
+            this->get(0, 1) * rhs.get(2, 0) + this->get(1, 1) * rhs.get(2, 1) + this->get(2, 1) * rhs.get(2, 2),
+            this->get(0, 2) * rhs.get(2, 0) + this->get(1, 2) * rhs.get(2, 1) + this->get(2, 2) * rhs.get(2, 2)
         });
     }
 
     Vec3<T> vec_mul(const Vec3<T>& rhs) const {
         return Vec3(
-            this->get(0, 0) * rhs.x + this->get(0, 1) * rhs.y + this->get(0, 2) * rhs.z,
-            this->get(1, 0) * rhs.x + this->get(1, 1) * rhs.y + this->get(1, 2) * rhs.z,
-            this->get(2, 0) * rhs.x + this->get(2, 1) * rhs.y + this->get(2, 2) * rhs.z
+            this->get(0, 0) * rhs.x + this->get(1, 0) * rhs.y + this->get(2, 0) * rhs.z,
+            this->get(0, 1) * rhs.x + this->get(1, 1) * rhs.y + this->get(2, 1) * rhs.z,
+            this->get(0, 2) * rhs.x + this->get(1, 2) * rhs.y + this->get(2, 2) * rhs.z
         );
     } 
 
@@ -44,7 +42,7 @@ struct Mat3 {
         if (det == static_cast<T>(0)) {
             return {};
         } else {
-            auto invdet = T::one() / det;
+            auto invdet = static_cast<T>(1) / det;
     
             return Mat3({
                 (this->get(1, 1) * this->get(2, 2) - this->get(2, 1) * this->get(1, 2)) * invdet,
@@ -58,6 +56,10 @@ struct Mat3 {
                 (this->get(0, 0) * this->get(1, 1) - this->get(1, 0) * this->get(0, 1)) * invdet,
             });
         }
+    }
+
+    T operator[](u32 index) {
+        return this->data[index];
     }
 };
 

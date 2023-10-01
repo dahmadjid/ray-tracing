@@ -23,8 +23,8 @@ namespace renderer
 {
     namespace chrono = std::chrono;
 
-
-    Renderer::Renderer(Window &window) : m_window(window) {
+    template<u32 window_width, u32 window_height>
+    Renderer<window_width, window_height>::Renderer(Window<window_width, window_height> &window) : m_window(window) {
         create_instance();
         setupDebugMessenger();
         create_surface();
@@ -99,8 +99,8 @@ namespace renderer
         createInfo.pUserData = nullptr;  // Optional
     }
 
-
-    void Renderer::create_instance() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_instance() {
         uint32_t layer_count;
         vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
@@ -174,8 +174,8 @@ namespace renderer
 
         }
     }
-
-    void Renderer::create_surface() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_surface() {
         auto res = glfwCreateWindowSurface(m_instance, m_window.m_glfw_window, nullptr, &m_surface);
         if (res != VK_SUCCESS) {
             panic("FAILED TO CREATE VK SURFACE: {}", string_VkResult(res));
@@ -183,8 +183,8 @@ namespace renderer
         }
         fmt::println("Surface created successfully");
     }
-
-    void Renderer::pick_physical_device() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::pick_physical_device() {
         uint32_t devices_count = 0;
         auto res = vkEnumeratePhysicalDevices(m_instance, &devices_count, NULL);
         if (res != VK_SUCCESS && res != VK_INCOMPLETE) {
@@ -225,8 +225,8 @@ namespace renderer
         }
         fmt::println("Found {} GPU", devices_count);
     }
-
-    QueueFamilyIndices Renderer::find_queue_families(const VkPhysicalDevice &device) {
+    template<u32 window_width, u32 window_height>
+    QueueFamilyIndices Renderer<window_width, window_height>::find_queue_families(const VkPhysicalDevice &device) {
 
         uint32_t queues_count = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queues_count, nullptr);
@@ -254,8 +254,8 @@ namespace renderer
         }
         return queues_indices_temp;
     }
-
-    bool Renderer::check_device_extensions_support(const VkPhysicalDevice &device) {
+    template<u32 window_width, u32 window_height>
+    bool Renderer<window_width, window_height>::check_device_extensions_support(const VkPhysicalDevice &device) {
         uint32_t count;
         vkEnumerateDeviceExtensionProperties(device, nullptr, &count, nullptr);
 
@@ -273,8 +273,8 @@ namespace renderer
 
         return m_required_extensions.size() == required_found;
     }
-
-    void Renderer::create_logical_device() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_logical_device() {
         auto queue_families = std::set({m_queues_indices.graphics.value(), m_queues_indices.presentation.value()});
         float prio = 1.0f;
         auto queues_create_infos = std::vector<VkDeviceQueueCreateInfo>();
@@ -310,8 +310,8 @@ namespace renderer
         vkGetDeviceQueue(m_device, m_queues_indices.presentation.value(), 0, &m_queues.presentation);
         fmt::println("Logical Device created successfully");
     }
-
-    void Renderer::create_swap_chain() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_swap_chain() {
         auto details = query_swap_chain_support(m_phy);
         auto selected_format = details.formats[0];
         auto selected_present_mode = VK_PRESENT_MODE_FIFO_KHR;
@@ -401,8 +401,8 @@ namespace renderer
         m_swap_chain_image_format = selected_format.format;
         m_swap_chain_extent = actual_extent;
     }
-
-    SwapChainSupportDetails Renderer::query_swap_chain_support(VkPhysicalDevice device) {
+    template<u32 window_width, u32 window_height>
+    SwapChainSupportDetails Renderer<window_width, window_height>::query_swap_chain_support(VkPhysicalDevice device) {
         SwapChainSupportDetails details;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_surface, &details.capabilities);
 
@@ -423,8 +423,8 @@ namespace renderer
         return details;
     }
 
-
-    void Renderer::create_image_views() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_image_views() {
         m_swap_chain_image_views.resize(m_swap_chain_images.size());
         for (size_t i = 0; i < m_swap_chain_image_views.size(); i++) {
             VkImageViewCreateInfo create_info{};
@@ -449,8 +449,8 @@ namespace renderer
             }
         }
     }
-
-    VkShaderModule Renderer::create_shader_module(const std::vector<char>& code) {
+    template<u32 window_width, u32 window_height>
+    VkShaderModule Renderer<window_width, window_height>::create_shader_module(const std::vector<char>& code) {
         VkShaderModuleCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         createInfo.codeSize = code.size();
@@ -464,8 +464,8 @@ namespace renderer
         return shaderModule;
 
     }
-
-    void Renderer::create_render_pass() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_render_pass() {
         VkAttachmentDescription color_attachment{};
         color_attachment.format = m_swap_chain_image_format;
         color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -509,8 +509,8 @@ namespace renderer
         }
 
     }
-
-    void Renderer::create_graphics_pipeline() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_graphics_pipeline() {
         auto vertex_shader = read_shader("shaders/vertex.spv");
         auto fragment_shader = read_shader("shaders/fragment.spv");
         auto vert_shader_module = create_shader_module(vertex_shader);
@@ -664,8 +664,8 @@ namespace renderer
         vkDestroyShaderModule(m_device, vert_shader_module, nullptr);
         vkDestroyShaderModule(m_device, frag_shader_module, nullptr);
     }
-
-    void Renderer::create_framebuffers() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_framebuffers() {
         m_swap_chain_framebuffers.resize(m_swap_chain_image_views.size());
         for (size_t i = 0; i < m_swap_chain_image_views.size(); i++) {
             VkImageView attachments[] = {
@@ -686,8 +686,8 @@ namespace renderer
             }
         }
     }
-
-    void Renderer::create_command_pool() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_command_pool() {
 
         VkCommandPoolCreateInfo pool_info{};
         pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -699,8 +699,8 @@ namespace renderer
 
         }
     }
-    
-    void Renderer::create_command_buffers() {
+        template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_command_buffers() {
 
         m_command_buffers.resize(MAX_FRAMES_IN_FLIGHT);
         VkCommandBufferAllocateInfo cmd_alloc_info{};
@@ -715,8 +715,8 @@ namespace renderer
 
         }
     }
-
-    void Renderer::record_command_buffer(VkCommandBuffer command_buffer, uint32_t image_index) {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::record_command_buffer(VkCommandBuffer command_buffer, uint32_t image_index) {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = 0; // Optional
@@ -787,8 +787,8 @@ namespace renderer
 
         }
     }
-
-    void Renderer::create_sync_objects() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_sync_objects() {
 
         m_image_available_semaphores.resize(MAX_FRAMES_IN_FLIGHT);
         m_render_finished_semaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -812,16 +812,16 @@ namespace renderer
             }
         }
     }
-
-    void Renderer::recreate_swap_chain() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::recreate_swap_chain() {
         vkDeviceWaitIdle(m_device);
         cleanup_swap_chain();
         create_swap_chain();
         create_image_views();
         create_framebuffers();
     }
-
-    void Renderer::cleanup_swap_chain() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::cleanup_swap_chain() {
         for (auto framebuffer : m_swap_chain_framebuffers) {
             vkDestroyFramebuffer(m_device, framebuffer, nullptr);
         }
@@ -832,8 +832,8 @@ namespace renderer
         
         vkDestroySwapchainKHR(m_device, m_swap_chain, nullptr);
     }
-
-    void Renderer::create_buffer(
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_buffer(
         VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& buffer_memory
     ) {
         VkBufferCreateInfo buffer_info{};
@@ -866,8 +866,8 @@ namespace renderer
 
         }
     }
-
-    void Renderer::create_vertex_buffer() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_vertex_buffer() {
         
         VkDeviceSize buffer_size = sizeof(m_vertices[0]) * m_vertices.size();
 
@@ -900,8 +900,8 @@ namespace renderer
         vkDestroyBuffer(m_device, staging_buffer, nullptr);
         vkFreeMemory(m_device, staging_buffer_memory, nullptr);
     }
-
-    void Renderer::create_index_buffer() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_index_buffer() {
         
         VkDeviceSize buffer_size = sizeof(m_indices[0]) * m_indices.size();
 
@@ -934,8 +934,8 @@ namespace renderer
         vkDestroyBuffer(m_device, staging_buffer, nullptr);
         vkFreeMemory(m_device, staging_buffer_memory, nullptr);
     }
-
-    void Renderer::create_uniform_buffers() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_uniform_buffers() {
         VkDeviceSize buffer_size = sizeof(UniformBufferObject);
 
         m_uniform_buffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -954,8 +954,8 @@ namespace renderer
             vkMapMemory(m_device, m_uniform_buffers_memory[i], 0, buffer_size, 0, &m_uniform_buffers_mapped[i]);
         }
     }
-
-    void Renderer::copy_buffer(VkBuffer src, VkBuffer dst, VkDeviceSize size) {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::copy_buffer(VkBuffer src, VkBuffer dst, VkDeviceSize size) {
         auto command_buffer = begin_single_time_commands();
 
         VkBufferCopy copy_region{};
@@ -967,8 +967,8 @@ namespace renderer
         end_single_time_commands(command_buffer);
     }
 
-
-    void Renderer::create_descriptor_set_layout() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_descriptor_set_layout() {
         VkDescriptorSetLayoutBinding ubo_layout_binding{};
         ubo_layout_binding.binding = 0;
         ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -997,8 +997,8 @@ namespace renderer
         }
 
     }
-
-    uint32_t Renderer::find_memory_types(uint32_t type_filter, VkMemoryPropertyFlags properties) {
+    template<u32 window_width, u32 window_height>
+    uint32_t Renderer<window_width, window_height>::find_memory_types(uint32_t type_filter, VkMemoryPropertyFlags properties) {
         VkPhysicalDeviceMemoryProperties mem_properties;
         vkGetPhysicalDeviceMemoryProperties(m_phy, &mem_properties);
         for (uint32_t i = 0; i < mem_properties.memoryTypeCount; i++) {
@@ -1009,8 +1009,8 @@ namespace renderer
         panic("FAILED TO FIND MEMORY TYPE FOR THE BUFFER");
         return 0;
     }
-
-    void Renderer::draw_frame() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::draw_frame() {
         vkWaitForFences(m_device, 1, &m_in_flight_fences[m_current_frame], VK_TRUE, UINT64_MAX);
         vkResetFences(m_device, 1, &m_in_flight_fences[m_current_frame]);
 
@@ -1066,8 +1066,8 @@ namespace renderer
         }
         m_current_frame = (m_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
-
-    void Renderer::create_descriptor_pool() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_descriptor_pool() {
         std::array<VkDescriptorPoolSize, 2> pool_sizes{};
         pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         pool_sizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
@@ -1085,8 +1085,8 @@ namespace renderer
             fmt::println("FAILED TO CREATE DESCRIPTOR POOL: {}", string_VkResult(res));
         }
     }
-
-    void Renderer::create_descriptor_sets() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_descriptor_sets() {
         std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, m_descriptor_set_layout);
         VkDescriptorSetAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -1137,8 +1137,8 @@ namespace renderer
         }
         vkUpdateDescriptorSets(m_device, all_descriptor_writes.size(), all_descriptor_writes.data(), 0, nullptr);
     }
-
-    void Renderer::setupDebugMessenger() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::setupDebugMessenger() {
         if (!enable_validation)
             return;
         VkDebugUtilsMessengerCreateInfoEXT createInfo;
@@ -1150,8 +1150,8 @@ namespace renderer
         }
 
     }
-
-    std::vector<char> Renderer::read_shader(std::string_view file_path) {
+    template<u32 window_width, u32 window_height>
+    std::vector<char> Renderer<window_width, window_height>::read_shader(std::string_view file_path) {
         std::ifstream stream;
         stream.open(file_path.data(), std::ios_base::ate | std::ios_base::binary);
         if (!stream.good()) {
@@ -1165,8 +1165,8 @@ namespace renderer
         stream.close();
         return buffer;
     }
-
-    void Renderer::update_uniform_buffers(uint32_t current_frame) {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::update_uniform_buffers(uint32_t current_frame) {
         static auto startTime = chrono::high_resolution_clock::now();
         auto currentTime = chrono::high_resolution_clock::now();
         float time = chrono::duration<float, chrono::seconds::period>(currentTime - startTime).count();
@@ -1177,12 +1177,12 @@ namespace renderer
         ubo.proj[1][1] *= -1;
         memcpy(m_uniform_buffers_mapped[current_frame], &ubo, sizeof(ubo));
     }   
-    
-    void Renderer::wait_for_device_idle() {
+        template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::wait_for_device_idle() {
         vkDeviceWaitIdle(m_device);
     }
-
-    VkCommandBuffer Renderer::begin_single_time_commands() {
+    template<u32 window_width, u32 window_height>
+    VkCommandBuffer Renderer<window_width, window_height>::begin_single_time_commands() {
         VkCommandBufferAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -1198,8 +1198,8 @@ namespace renderer
         return command_buffer;
     }
 
-
-    void Renderer::end_single_time_commands(VkCommandBuffer command_buffer) {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::end_single_time_commands(VkCommandBuffer command_buffer) {
         vkEndCommandBuffer(command_buffer);
         VkSubmitInfo submit_info{};
         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1209,8 +1209,8 @@ namespace renderer
         vkQueueWaitIdle(m_queues.graphics);
         vkFreeCommandBuffers(m_device, m_command_pool, 1, &command_buffer);
     }
-
-    void Renderer::create_texture_image() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_texture_image() {
         m_image_size = m_swap_chain_extent.height * m_swap_chain_extent.width * 4;
         m_image_buffers.resize(MAX_FRAMES_IN_FLIGHT);
         m_image_buffers_memory.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1239,8 +1239,8 @@ namespace renderer
         );
 
     }
-
-    void Renderer::write_image(VkCommandBuffer command_buffer, uint32_t current_frame) {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::write_image(VkCommandBuffer command_buffer, uint32_t current_frame) {
         memcpy(m_image_buffers_mapped[0], m_image_data, static_cast<size_t>(m_image_size));
         transition_image_layout(m_texture_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, command_buffer);
         copy_buffer_to_image(
@@ -1252,8 +1252,8 @@ namespace renderer
         );
         transition_image_layout(m_texture_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, command_buffer);
     }
-
-    void Renderer::create_image(
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_image(
         uint32_t width, 
         uint32_t height, 
         VkFormat format, 
@@ -1296,8 +1296,8 @@ namespace renderer
         vkBindImageMemory(m_device, image, image_memory, 0);
 
     }
-
-    void Renderer::transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, VkCommandBuffer command_buffer) {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, VkCommandBuffer command_buffer) {
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.oldLayout = old_layout;
@@ -1340,8 +1340,8 @@ namespace renderer
         );
 
     }
-
-    void Renderer::copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, VkCommandBuffer command_buffer) {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, VkCommandBuffer command_buffer) {
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
         region.bufferRowLength = 0;
@@ -1362,8 +1362,8 @@ namespace renderer
         vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
         
     }
-
-    void Renderer::create_texture_image_view() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_texture_image_view() {
         VkImageViewCreateInfo view_info{};
         view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         view_info.image = m_texture_image;
@@ -1379,8 +1379,8 @@ namespace renderer
             panic("FAILED TO CREATE TEXTURE IMAGE VIEW: {}", string_VkResult(res));
         }
     }
-
-    void Renderer::create_texture_sampler() {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::create_texture_sampler() {
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -1405,12 +1405,13 @@ namespace renderer
         }
     }
     
-    void Renderer::update_image(uint8_t *image_data) {
+    template<u32 window_width, u32 window_height>
+    void Renderer<window_width, window_height>::update_image(uint8_t *image_data) {
         m_image_data = image_data;
         m_image_updated = true;
     }
-
-    Renderer::~Renderer() {
+    template<u32 window_width, u32 window_height>
+    Renderer<window_width, window_height>::~Renderer() {
         this->cleanup_swap_chain();
         vkDestroySampler(m_device, m_texture_sampler, nullptr);
         vkDestroyImageView(m_device, m_texture_image_view, nullptr);

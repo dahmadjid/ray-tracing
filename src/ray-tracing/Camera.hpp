@@ -25,7 +25,7 @@ class Camera {
 public:
     std::unique_ptr<std::array<Vec3<f32>, window_height * window_width>> ray_directions;
     Camera(f32 vfov)
-    : m_position(Vec3(0.f, 1.f, 5.f)) {
+    : m_position(Vec3(0.f, 0.f, 30.f)) {
         auto theta = to_radians(vfov);
         auto h = std::tan(theta/2.0);
         auto viewport_height =  1.0 * h;
@@ -38,7 +38,7 @@ public:
         m_viewport_height = viewport_height;
         m_viewport_width = viewport_width;
         m_z_axis = z_axis;
-        this->rotate(0.2, 0);
+        this->rotate(0, 0);
         this->calculate_ray_directions();
     
     }
@@ -73,7 +73,8 @@ public:
     void rotate(f32 pitch_delta_radians, f32 yaw_delta_radians) {
         auto up_dir = Vec3(0.0f, 1.0f, 0.0f);
         auto right_direction = m_z_axis.cross(up_dir).normalize();
-        m_z_axis.rotate(Quaternion<f32>::angle_axis(-pitch_delta_radians, right_direction).cross(Quaternion<f32>::angle_axis(-yaw_delta_radians, up_dir)).normalize());
+        auto up = m_z_axis.cross(right_direction).normalize();
+        m_z_axis.rotate(Quaternion<f32>::angle_axis(-pitch_delta_radians, right_direction).cross(Quaternion<f32>::angle_axis(yaw_delta_radians, up)).normalize());
     }
 
 

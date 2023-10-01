@@ -79,6 +79,10 @@ struct UniformBufferObject {
     alignas(16) glm::mat4 proj;
 };
 
+
+
+
+template<u32 window_width, u32 window_height>
 class Renderer {
 
 
@@ -104,7 +108,7 @@ class Renderer {
     QueueFamilyIndices m_queues_indices;
     Queues m_queues;
     VkSurfaceKHR m_surface;
-    Window& m_window;
+    Window<window_width, window_height>& m_window;
 
     VkSwapchainKHR m_swap_chain;
 
@@ -215,7 +219,7 @@ class Renderer {
     void create_texture_image_view(); 
     void write_image(VkCommandBuffer command_buffer, uint32_t current_frame);
 public:
-    Renderer(Window& window);
+    Renderer(Window<window_width, window_height>& window);
     void draw_frame();
     void wait_for_device_idle();
     void update_image(uint8_t* image_data);

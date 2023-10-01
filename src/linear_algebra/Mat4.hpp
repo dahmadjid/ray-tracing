@@ -175,4 +175,9 @@ struct Mat4 {
         }
     
     }
+
+
+    T operator[](u32 index) {
+        return this->data[index];
+    }
 };

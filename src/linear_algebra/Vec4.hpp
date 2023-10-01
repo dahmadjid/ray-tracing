@@ -176,6 +176,15 @@ struct Vec4 {
         this->y /= rhs.y; 
         this->z /= rhs.z;
     }
+
+
+    Vec4& clamp(T min, T max) {
+        this->w = std::max(std::min(this->w, max), min);
+        this->x = std::max(std::min(this->x, max), min);
+        this->y = std::max(std::min(this->y, max), min);
+        this->z = std::max(std::min(this->z, max), min);
+        return *this;
+    }
 };
 
 /**

@@ -22,29 +22,39 @@ namespace RayTracer {
                     return {};
                 } 
             }
-
             Vec3<f32> hit_point = origin + Vec3(ray.direction).scale(root);
-            Vec3<f32> normal = (hit_point - this->m_position).scale(this->m_radius);
-
-            if (ray.direction.dot(normal) > 0.0) {
-                return HitPayload{
-                    .hit_position=hit_point, 
-                    .normal=-normal, 
-                    .t=root, 
-                    .front_face=false,  
-                    .object_color=this->object_color()
-                };
-
-            } else {
-                return HitPayload{
-                    .hit_position=hit_point, 
-                    .normal=normal , 
-                    .t=root, 
-                    .front_face=true ,  
-                    .object_color=this->object_color()
-                };
+            Vec3<f32> normal = (hit_point - this->position()).scale(1.0f / this->m_radius).normalize();
+            
+            return HitPayload{
+                .hit_position=hit_point, 
+                .normal=normal, 
+                .t=root, 
+                .front_face=true ,  
+                .object_color=this->object_color()
+            };
                 
-            }
         }
+    }
+
+    std::optional<HitPayload> PointLight::hit(const Ray& ray, i32 t_min, i32 t_max) const {
+
+        // check if this->m_position - ray.origin is a scalar multiple of ray.direction
+        // x,y,z of res needs to be equal. any of them is t.
+        Vec3 res = (this->m_position - ray.origin) / ray.direction;
+
+        if (res.x == res.y && res.x == res.z) {
+            if (res.x <= t_min || res.x >= t_max) {
+                return {};
+            }
+            return HitPayload{
+                .hit_position=this->m_position, 
+                .normal=Vec3(0.f, 0.f, 0.f), 
+                .t=res.x, 
+                .front_face=true,  
+                .object_color=this->object_color()
+            };
+        }
+
+        return {};
     }
 };

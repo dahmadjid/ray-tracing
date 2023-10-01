@@ -12,8 +12,8 @@ else()
         add_link_options(-fuse-ld=lld) 
     else()
         message("${CMAKE_BUILD_TYPE}")
-        add_compile_options(-Wall -Wextra -Wpedantic -Wunused -O3 -std=c++20 -fsanitize=address)
-        add_link_options(-fuse-ld=lld -fsanitize=address) 
+        add_compile_options(-Wall -Wextra -Wpedantic -Wunused -O3 -std=c++20 -fsanitize=address -fsanitize=undefined)
+        add_link_options(-fuse-ld=lld -fsanitize=address -fsanitize=undefined) 
 
     endif()
 endif()
@@ -34,8 +34,6 @@ file(COPY shaders DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/src")
 
 add_executable(renderer 
     src/main.cpp
-    src/renderer/renderer.cpp 
-    src/window/window.cpp
     src/ray-tracing/objects.cpp
     src/utils/MathUtils.cpp
 )
@@ -50,4 +48,4 @@ target_include_directories(renderer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(renderer fmt::fmt glfw glm::glm vulkan vulkan-headers::vulkan-headers)
 
 target_include_directories(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src) 
-target_link_libraries(tests Catch2::Catch2WithMain fmt::fmt)
+target_link_libraries(tests glm::glm Catch2::Catch2WithMain fmt::fmt)
