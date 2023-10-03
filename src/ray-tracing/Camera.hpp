@@ -27,8 +27,8 @@ public:
     std::unique_ptr<std::array<Vec4<u32>, window_width * window_height>> accumulation_data;
     u32 frame_index = 1;
     
-    Camera(f32 vfov) :  
-        m_position(Vec3(20.f, 50.f, 50.f)),
+    Camera(f32 vfov, Vec3<f32> position, f32 pitch, f32 yaw) :  
+        m_position(position),
         image(std::make_unique<std::array<Vec4<u8>, window_height * window_width>>()),
         ray_directions(std::make_unique<std::array<Vec3<f32>, window_height * window_width>>()),
         accumulation_data(std::make_unique<std::array<Vec4<u32>, window_width * window_height>>()) 
@@ -46,7 +46,7 @@ public:
         m_viewport_width = viewport_width;
         m_z_axis = z_axis;
 
-        this->rotate(3.9f, 3.4f);
+        this->rotate(pitch, yaw);
         this->calculate_ray_directions();
     
     }

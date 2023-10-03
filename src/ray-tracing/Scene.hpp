@@ -79,12 +79,12 @@ public:
                             Ray shadow_ray;
                             shadow_ray.origin = payload->hit_position;
                             shadow_ray.direction = (light.position - shadow_ray.origin);
-                            auto p = m_objects.any_hit(shadow_ray, 0.001f, std::numeric_limits<f32>::max());               
-                            if (p.has_value()) {
-                                return -1.f;
-                            } else {
-                                return std::max(payload->normal.dot(shadow_ray.direction), 0.0f);  // == cos(angle)
-                            }
+                            // auto p = m_objects.any_hit(shadow_ray, 0.001f, std::numeric_limits<f32>::max());               
+                            // if (p.has_value()) {
+                            //     return -1.f;
+                            // } else {
+                            return std::max(payload->normal.dot(Vec3(1.0f)), 0.0f);  // == cos(angle)
+                            // }
                         }
                     }, light);
 
@@ -99,21 +99,26 @@ public:
                 }
 
 
-                Vec3<f32> rand_vector = Vec3<f32>::random(seed).normalize();
-                ray.direction = ray.direction.reflect(payload->normal) + rand_vector.scale(payload->material.roughness / 2.0f);
+                Vec3<f32> rand_vector = Vec3<f32>::random(seed);
+                if (ray.direction.dot(rand_vector) < 0) {
+                    rand_vector = -rand_vector;
+                }
+                ray.direction = ray.direction.reflect(payload->normal) + rand_vector.scale(std::max(payload->material.roughness / 2.0f, 0.05f) );
                 hit_count += 1;
-                total += payload->material.albedo.cast<f32>().scale(multiplier * std::max(light_intensity, 0.5f)).cast<u32>();
+                total += payload->material.albedo.cast<f32>().scale(multiplier * light_intensity).cast<u32>();
                 // total += Vec4<f32>(payload->normal.x, payload->normal.y, payload->normal.z, 0.f).shift(1.f).scale(1.f/2.f).scale(255).floor<u32>();
                 // total = light_count == 0 ? Vec4<u32>(128, 128, 128, 128) : Vec4<u32>(255, 255, 255, 255);
-                multiplier *= std::max(0.5f - payload->material.roughness / 2.0f, 0.0f);
+                multiplier *= 0.6f;
             } else {
-                if (hit_count != 0) {
-                    total += Vec4<f32>(255).scale(multiplier * 0.5f).cast<u32>();
+                hit_count += 1;
+                if (hit_count != 1) {
+                    multiplier *= 0.3f;
                 } else {
-                    total += Vec4<u32>(200, 200, 240, 255);
+                    multiplier = 1.f;
                 }
                 // auto a = 0.5 * ((f32)ray.direction.y + 1.0);
                 // total += (Vec4<u32>(255, 255, 255, 255).scale(1.0 - a) + Vec4<u32>(127, 0.9 * 255, 255, 255).scale(a)).scale(multiplier);
+                total += Vec4<f32>(120, 170, 240, 255).scale(multiplier).cast<u32>();
                 break;
             }
 
@@ -123,13 +128,13 @@ public:
     }
 
 
-    void render() {
+    void render(u32 max_bounces) {
         this->m_camera.calculate_ray_directions();
         BS::thread_pool thread_pool(8);
         for (i32 y = window_height - 1; y >= 0; y--) {
-            thread_pool.push_loop(window_width, [this, y](const int a, const int b) {
+            thread_pool.push_loop(window_width, [this, y, max_bounces](const int a, const int b) {
                 for (int x = a; x < b; x++) {
-                    Vec4<u8> color = per_pixel(x, y, 10);
+                    Vec4<u8> color = per_pixel(x, y, max_bounces);
                     m_camera.accumulation_data->operator[](x + y * window_width) += color.cast<u32>();
                     Vec4<u32> accumulated_color = m_camera.accumulation_data->operator[](x + y * window_width);
                     accumulated_color = (accumulated_color.cast<f32>().scale(1.f/static_cast<f32>(m_camera.frame_index))).clamp(0, 255).cast<u32>();
