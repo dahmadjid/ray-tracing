@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <random>
 #include <fmt/format.h>
-#include "linear_algebra/Vec3.decl.hpp"
 #include "linear_algebra/Vec3.hpp"
 #include "utils/MathUtils.hpp"
 
@@ -39,8 +38,7 @@ struct Vec4 {
      * @param factor 
      * @return Vec4& 
      */
-    template<typename U>
-    Vec4& scale(U factor) {
+    Vec4& scale(T factor) {
         this->w *= factor;
         this->x *= factor;
         this->y *= factor;
@@ -98,8 +96,7 @@ struct Vec4 {
      * @param factor 
      * @return Vec4& 
      */
-    template<typename U>
-    Vec4& shift(U factor) {
+    Vec4& shift(T factor) {
         this->w += factor;
         this->x += factor;
         this->y += factor;

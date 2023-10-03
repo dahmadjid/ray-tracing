@@ -218,6 +218,29 @@ class Renderer {
     void copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, VkCommandBuffer command_buffer);
     void create_texture_image_view(); 
     void write_image(VkCommandBuffer command_buffer, uint32_t current_frame);
+
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT,
+        VkDebugUtilsMessageTypeFlagsEXT,
+        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+        void*
+    );
+
+    VkResult CreateDebugUtilsMessengerEXT(
+        VkInstance instance,
+        const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+        const VkAllocationCallbacks *pAllocator,
+        VkDebugUtilsMessengerEXT *pDebugMessenger
+    );
+
+    void DestroyDebugUtilsMessengerEXT(
+        VkInstance instance, 
+        VkDebugUtilsMessengerEXT debugMessenger, 
+        const VkAllocationCallbacks *pAllocator
+    );
+
+    void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
+
 public:
     Renderer(Window<window_width, window_height>& window);
     void draw_frame();

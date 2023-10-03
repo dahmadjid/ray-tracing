@@ -6,7 +6,7 @@
 
 
 namespace RayTracer {
-    std::optional<HitPayload> Sphere::hit(const Ray& ray, i32 t_min, i32 t_max) const {
+    std::optional<HitPayload> Sphere::hit(const Ray& ray, f32 t_min, f32 t_max) const {
         Vec3<f32> origin = ray.origin - this->position();
         f32 a = ray.direction.dot(ray.direction);
         f32 b = 2 * origin.dot(ray.direction);
@@ -18,7 +18,7 @@ namespace RayTracer {
         }
 
         f32 root = (-b - std::sqrt(discriminant)) / (2.0f * a);
-        if (root > t_max || root < t_min) {
+        if (root >= t_max || root <= t_min) {
             return std::nullopt;
         }
 
@@ -27,21 +27,14 @@ namespace RayTracer {
 
         HitPayload payload;
 
-        payload.hit_position = origin + Vec3(ray.direction).scale(root);
-        payload.normal = payload.hit_position.normalize();
-        payload.hit_position += this->position();
+        payload.hit_position = ray.origin + Vec3(ray.direction).scale(root);
+        payload.normal = (payload.hit_position - this->position()).scale(1.0f / this->m_radius);
+        if (ray.direction.dot(payload.normal) > 0) {
+            payload.normal = -payload.normal;
+        }
         payload.t = root;
-        payload.object_color = this->object_color();
+        payload.material = this->material();
         
         return payload;
-
-        // return HitPayload{
-        //     .hit_position=hit_point, 
-        //     .normal=normal, 
-        //     .t=root, 
-        //     .front_face=true ,  
-        //     .object_color=this->object_color()
-        // };
-                
     }
 };

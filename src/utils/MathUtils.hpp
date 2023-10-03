@@ -16,7 +16,7 @@ typedef double f64;
 
 template<typename T>
 static inline constexpr float to_radians(T degrees) {
-    return degrees * (std::numbers::pi / 180);
+    return degrees * (static_cast<T>(std::numbers::pi) / 180);
 }
 
 

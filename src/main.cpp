@@ -25,12 +25,39 @@ int main() {
     auto r = renderer::Renderer(w);
     Scene scene(cam);
 
-    // scene.add_object(Sphere(Vec3<f32>(0, 1, -3), 0.3f, Vec4<u8>(0, 0, 127, 255)));
-    // scene.add_object(Sphere(Vec3<f32>(0., 0., -3), 0.5f, Vec4<u8>(0, 127, 0, 255)));
-    scene.add_object(Sphere(Vec3<f32>(0, 2.5f,-3), 2.5f, Vec4<u8>(127, 0, 0, 255)));
-    scene.add_object(Sphere(Vec3<f32>(0, -8.f, -3.2), 8.f, Vec4<u8>(127, 0, 0, 255)));
-    scene.add_light(PointLight(Vec3<f32>(5, 1, -3), Vec4<u8>(255, 255, 255, 255)));
+    scene.add_object(Sphere(
+        Vec3<f32>(0.f,  0.f, 0.f),
+        1.0f,
+        Material{
+            .albedo = Vec4<u8>(200, 0, 0, 255),
+            .roughness = .8f,
+            .metalic = 0.0f
+        })
+    );
 
+    scene.add_object(Sphere(
+        Vec3<f32>(0.f, -21.f, -3.f),
+        20.0f, 
+        Material{
+            .albedo = Vec4<u8>(200, 200, 0, 255),
+            .roughness = 0.f,
+            .metalic = 0.0f
+        })
+    );
+
+
+    scene.add_light(PointLight(Vec3<f32>(0.3f, 1.7f, 0), Vec4<u8>(255, 255, 255, 255)));
+    
+
+    // Ray shadow_ray;
+    // shadow_ray.origin = payload->hit_position;
+    // shadow_ray.direction = (light.position - shadow_ray.origin);
+    // auto p = m_objects.any_hit(shadow_ray, 0.001f, std::numeric_limits<f32>::max());               
+    // if (p.has_value()) {
+    //     return -1.f;
+    // } else {
+    //     return std::max(payload->normal.dot(shadow_ray.direction), 0.0f);  // == cos(angle)
+    // }
             
     
     while(!w.should_close()) {

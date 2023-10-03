@@ -38,8 +38,7 @@ struct Vec3 {
      * @param factor 
      * @return Vec3& 
      */
-    template<typename U>
-    Vec3& scale(U factor);
+    Vec3& scale(T factor);
 
     /**
      * @brief normalizes in place, returns reference to the same Vec3
@@ -68,8 +67,7 @@ struct Vec3 {
      * @param factor 
      * @return Vec3& 
      */
-    template<typename U>
-    Vec3& shift(U factor);
+    Vec3& shift(T factor);
     
 
     Vec3 operator-() const;
@@ -81,6 +79,8 @@ struct Vec3 {
      * @return Vec3& 
      */
     Vec3<T>& rotate(const Quaternion<T>& rotation_quaternion);
+
+    Vec3<T> reflect(const Vec3<T>& axis) const;
 
 
     static Vec3<float> random(uint32_t& seed);
@@ -112,6 +112,7 @@ struct Vec3 {
     * @param rhs 
     */
     void operator/=(const Vec3<T>& rhs);
+
 
 };
 

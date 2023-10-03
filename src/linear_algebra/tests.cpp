@@ -9,6 +9,7 @@
 #include <glm/ext/quaternion_relational.hpp>
 #include <glm/ext/quaternion_transform.hpp>
 #include <glm/ext/quaternion_trigonometric.hpp>
+#include <glm/geometric.hpp>
 #include <glm/matrix.hpp>
 #include <numbers>
 #include "linear_algebra/Vec3.decl.hpp"
@@ -208,6 +209,12 @@ TEST_CASE("VEC3: QUATERNION ROTATION MATRIX") {
     vec3_equal(rotated_by_quat, rotated_by_matrix);
 }
 
+TEST_CASE("VEC3: reflect") {
+    auto res_glm = glm::reflect(glm::vec3(2.12f, 1.234f, 3.42f), glm::vec3(1.0f, 0, 0));   
+    auto res = Vec3(2.12f, 1.234f, 3.42f).reflect(Vec3(1.f, 0.f, 0.f));
+
+    vec3_equal(res_glm, res);
+}
 
 
 
@@ -274,14 +281,6 @@ TEST_CASE("MAT3: MAT-VEC") {
     vec3_equal(a.vec_mul(b), a_glm * b_glm);
 }
 
-
-
-TEST_CASE("MAT3: inverse") {
-    Mat3<f32> a{.data={1.123, 2.12, 3.45, 4.32, 5.997, 6.12, 72.12, 8.23, 9.123}};
-    
-    mat3 a_glm(1.123, 2.12, 3.45, 4.32, 5.997, 6.12, 72.12, 8.23, 9.123);
-    mat3_equal(a.inverse().value(), glm::inverse(a_glm));
-}
 
 
 TEST_CASE("MAT3: inverse") {

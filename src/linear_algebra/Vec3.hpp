@@ -45,8 +45,7 @@ auto Vec3<T>::length() const {
 }
 
 template<typename T>
-template<typename U>
-Vec3<T>& Vec3<T>::scale(U factor) {
+Vec3<T>& Vec3<T>::scale(T factor) {
     this->x *= factor;
     this->y *= factor;
     this->z *= factor;
@@ -81,8 +80,7 @@ Vec3<uint32_t> Vec3<T>::ceil() const {
 }
 
 template<typename T>
-template<typename U>
-Vec3<T>& Vec3<T>::shift(U factor) {
+Vec3<T>& Vec3<T>::shift(T factor) {
     this->x += factor;
     this->y += factor;
     this->z += factor;
@@ -122,6 +120,10 @@ Vec3<float> Vec3<T>::random(u32& seed) {
     );
 }
 
+template<typename T>
+Vec3<T> Vec3<T>::reflect(const Vec3<T>& axis) const {
+    return *this - Vec3(axis).scale(this->dot(axis) * static_cast<T>(2));
+}
 
 
 template<typename T>

@@ -41,43 +41,43 @@ public:
         f32 yaw = 0;
         switch(key) {
             case GLFW_KEY_DOWN:
-                pitch += 0.1;
+                pitch += 0.1f;
                 break;
 
             case GLFW_KEY_UP:
-                pitch -= 0.1;
+                pitch -= 0.1f;
                 break;
 
             case GLFW_KEY_RIGHT:
-                yaw += 0.1;
+                yaw += 0.1f;
                 break;
             
             case GLFW_KEY_LEFT:
-                yaw -= 0.1;
+                yaw -= 0.1f;
                 break;
             
             case GLFW_KEY_W:
-                this_window->cam.update_z_position(0.5);
+                this_window->cam.update_z_position(0.5f);
                 break;
 
             case GLFW_KEY_S:
-                this_window->cam.update_z_position(-0.5);
+                this_window->cam.update_z_position(-0.5f);
                 break;
 
             case GLFW_KEY_D:
-                this_window->cam.update_x_position(0.5);
+                this_window->cam.update_x_position(0.5f);
                 break;
 
             case GLFW_KEY_A:
-                this_window->cam.update_x_position(-0.5);
+                this_window->cam.update_x_position(-0.5f);
                 break;
 
             case GLFW_KEY_Q:
-                this_window->cam.update_y_position(0.5);
+                this_window->cam.update_y_position(0.5f);
                 break;
 
             case GLFW_KEY_E:
-                this_window->cam.update_y_position(-0.5);
+                this_window->cam.update_y_position(-0.5f);
                 break;
         }
 

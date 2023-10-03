@@ -28,17 +28,16 @@ public:
     u32 frame_index = 1;
     
     Camera(f32 vfov) :  
-        m_position(Vec3(0.f, 0.f, 30.f)),
-        ray_directions(std::make_unique<std::array<Vec3<f32>, window_height * window_width>>()),
+        m_position(Vec3(20.f, 50.f, 50.f)),
         image(std::make_unique<std::array<Vec4<u8>, window_height * window_width>>()),
+        ray_directions(std::make_unique<std::array<Vec3<f32>, window_height * window_width>>()),
         accumulation_data(std::make_unique<std::array<Vec4<u32>, window_width * window_height>>()) 
-
     {
 
-        auto theta = to_radians(vfov);
-        auto h = std::tan(theta/2.0);
-        auto viewport_height =  1.0 * h;
-        auto viewport_width =  viewport_height * window_width / window_height;
+        f32 theta = to_radians(vfov);
+        f32 h = std::tan(theta / 2.0f);
+        f32 viewport_height = 1.0f * h;
+        f32 viewport_width = viewport_height * window_width / window_height;
 
         auto z_axis = Vec3(0.0f, 0.0f, -1.0f);
 
@@ -47,23 +46,24 @@ public:
         m_viewport_width = viewport_width;
         m_z_axis = z_axis;
 
-        this->rotate(0, 0);
+        this->rotate(3.9f, 3.4f);
         this->calculate_ray_directions();
     
     }
 
     void calculate_ray_directions() {
         auto up = Vec3(0.0f, 1.0f, 0.0f);
-        auto right_direction = m_z_axis.cross(up).normalize().scale(m_viewport_width/2.0);
-        auto up_direction = m_z_axis.cross(right_direction).normalize().scale(m_viewport_height/2.0);
+        auto right_direction = m_z_axis.cross(up).normalize().scale(m_viewport_width / 2.0f);
+        auto up_direction = m_z_axis.cross(right_direction).normalize().scale(m_viewport_height / 2.0f);
         for (int y = window_height - 1; y >= 0; y--) {
-            auto v = static_cast<f32>(y) / static_cast<f32>(window_height) * 2.0 - 1.0;
+            f32 v = static_cast<f32>(y) / static_cast<f32>(window_height) * 2.0f - 1.0f;
             for (u32 x = 0; x < window_width; x++) {
-                auto u = static_cast<f32>(x) / static_cast<f32>(window_width) * 2.0 - 1.0;
+                f32 u = static_cast<f32>(x) / static_cast<f32>(window_width) * 2.0f - 1.0f;
                 this->ray_directions->operator[](x + y * window_width) = (m_z_axis + Vec3(right_direction).scale(u) + Vec3(up_direction).scale(v));
             }
         }
     }
+
 
 
     void update_x_position(f32 x) {

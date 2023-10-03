@@ -12,7 +12,7 @@ struct Quaternion: public Vec4<T> {
     Quaternion(T w, T x, T y, T z);
 
     Quaternion cross(const Quaternion<T>& rhs) const;
-    static Quaternion angle_axis(float angle_radians, const Vec3<T>& unit_axis);
+    static Quaternion angle_axis(T angle_radians, const Vec3<T>& unit_axis);
 
     Quaternion operator-() const;
 };

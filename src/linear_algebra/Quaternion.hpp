@@ -20,9 +20,9 @@ Quaternion<T> Quaternion<T>::cross(const Quaternion<T>& rhs) const {
 }
 
 template<typename T>
-Quaternion<T> Quaternion<T>::angle_axis(float angle_radians, const Vec3<T>& unit_axis) {
-    auto half_cos_angle = std::cos(angle_radians / 2.0);
-    auto half_sin_angle = std::sin(angle_radians / 2.0);
+Quaternion<T> Quaternion<T>::angle_axis(T angle_radians, const Vec3<T>& unit_axis) {
+    T half_cos_angle = (T)std::cos(angle_radians / 2.0);
+    T half_sin_angle = (T)std::sin(angle_radians / 2.0);
     return Quaternion(
         half_cos_angle,
         unit_axis.x * half_sin_angle,

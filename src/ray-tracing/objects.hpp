@@ -14,12 +14,20 @@
 
 
 namespace RayTracer {
+
+
+struct Material {
+    Vec4<u8> albedo;
+    float roughness = 0.0f;
+    float metalic = 0.0f;
+};
+
 struct HitPayload {
     Vec3<f32> hit_position;
     Vec3<f32> normal;
     f32 t = 0;
     bool front_face = false;
-    Vec4<u8> object_color;
+    Material material;
 };
 
 template<typename T>
@@ -27,7 +35,7 @@ concept Hittable = requires (T& object, const Vec3<f32>& position, const Ray& ra
     { object.position() } -> std::same_as<Vec3<f32>>;
     { object.set_position(position) } -> std::same_as<void>;
     { object.hit(ray, t_min, t_max) } -> std::same_as<std::optional<HitPayload>>;
-    { object.object_color() } -> std::same_as<Vec4<u8>>;
+    { object.material() } -> std::same_as<Material>;
 };
 
 
@@ -63,11 +71,10 @@ public:
 
         return closest_payload;
     }
-
     std::optional<HitPayload> any_hit(const Ray& ray, f32 t_min, f32 t_max) const {
         for (const auto& object: m_hittable_objects) {
             std::optional<HitPayload> hit_payload = std::visit(overloaded {
-                [&](const auto& object) {
+                [&](const auto& object) -> std::optional<HitPayload> {
                     return object.hit(ray, t_min, t_max);
                 }
             }, object);
@@ -88,16 +95,20 @@ private:
 
 class Sphere {
 public:
-    std::optional<HitPayload> hit(const Ray& ray, i32 t_min, i32 t_max) const;
+    std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const;
     Vec3<f32> position() const { return m_position; }
     void set_position(const Vec3<f32>& pos) { m_position = pos; }
-    Vec4<u8> object_color() const { return m_object_color; }
-    Sphere(const Vec3<f32>& position, f32 radius, const Vec4<u8>& object_color): m_position(position), m_radius(radius), m_object_color(object_color) {}
+    Material material() const { return m_material; }
+    Sphere(
+        const Vec3<f32>& position, 
+        f32 radius, 
+        const Material& material
+    ) : m_position(position), m_radius(radius), m_material(material) {}
 
 private:
     Vec3<f32> m_position;    
     f32 m_radius = 0;
-    Vec4<u8> m_object_color;
+    Material m_material;
 };
 
 
