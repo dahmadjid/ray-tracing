@@ -29,19 +29,19 @@ int main() {
     Scene scene(cam);
 
     scene.add_object(Sphere(
-        Vec3<f32>(4.f,  14.f, 4.f),
+        Vec3<f32>(2.f,  14.f, 2.f),
         10.0f,
         Material{
             .albedo = Vec3<f32>(1.0f),
             .roughness = 1.0f,
             .metalic = 0.0f,
             .emission_color = Vec3<f32>(1.0f),
-            .emission_power = 1.0f
+            .emission_power = 3.0f
         })
     );
 
     scene.add_object(Sphere(
-        Vec3<f32>(1.2f,  0.f, 0.f),
+        Vec3<f32>(1.1f,  0.f, 0.f),
         1.0f,
         Material{
             .albedo = u8_color_to_float(Vec3<u8>(255, 20, 0)),
@@ -52,7 +52,7 @@ int main() {
 
 
     scene.add_object(Sphere(
-        Vec3<f32>(-1.2f, 0.f, 0.0f),
+        Vec3<f32>(-1.1f, 0.f, 0.0f),
         1.0f,
         Material{
             .albedo = u8_color_to_float(Vec3<u8>(25, 0, 200)),
@@ -65,14 +65,14 @@ int main() {
         Vec3<f32>(0.f, -21.f, -0.f),
         20.0f, 
         Material{
-            .albedo = u8_color_to_float(Vec3<u8>(100, 100, 100)),
+            .albedo = u8_color_to_float(Vec3<u8>(170, 180, 190)),
             .roughness = 1.0f,
             .metalic = 0.0f
         })
     );
 
     while(!w.should_close()) {
-        scene.render(10);
+        scene.render(5);
         r.update_image(reinterpret_cast<u8*>(cam.image->data()));
         r.draw_frame();
         glfwPollEvents();
