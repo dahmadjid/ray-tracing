@@ -13,7 +13,9 @@ struct Vec3 {
     T x;
     T y;
     T z;
-    Vec3(): x(static_cast<T>(0)), y(static_cast<T>(0)), z(static_cast<T>(0)) {}
+    Vec3();
+    explicit Vec3(T value);
+
     Vec3(T x, T y, T z);
 
     T dot(const Vec3& rhs) const;
@@ -26,9 +28,9 @@ struct Vec3 {
      */
     Vec3 cross(const Vec3& rhs) const;
 
-    auto length_squared() const ;
+    auto length_squared() const;
 
-    auto length() const ;
+    auto length() const;
 
     /**
      * @brief scales Vec3 in place and returns reference to the same Vec3 

@@ -10,6 +10,7 @@
 #include <functional>
 #include <limits>
 #include <map>
+#include <memory>
 #include <optional>
 #include <system_error>
 #include <thread>
@@ -18,21 +19,23 @@
 #include <utility>
 #include <array>
 #include <numbers>
+#include <variant>
 #include <vector>
 #include "utils/BS_thread_pool.hpp"
+#include "utils/Overloaded.hpp"
 
 namespace RayTracer {
 
 template<u32 window_width, u32 window_height>
 class Scene {
-
-public:
     ObjectsList m_objects;
     LightList m_lights;
+
+
+public:
     Camera<window_width, window_height>& m_camera;
     
-    Scene(Camera<window_width, window_height>& camera)
-        : m_camera(camera) {} 
+    Scene(Camera<window_width, window_height>& camera) : m_camera(camera) {} 
     
     Scene(Scene&) = delete;
     Scene& operator=(Scene&) = delete;
@@ -46,56 +49,65 @@ public:
 
     template<typename T>
     void add_light(T&& light_object) {
-        m_lights.add_object(std::forward<T>(light_object));
+        m_lights.emplace_back(std::forward<T>(light_object));
     }
 
-    void per_pixel(u32 x, u32 y, u32 max_bounces, std::array<Vec4<u8>, window_height * window_width>& image, std::unordered_map<std::string, int>& expose, bool expose_) const {
+    Vec4<u8> per_pixel(
+        u32 x,
+        u32 y, 
+        u32 max_bounces 
+    ) const {
+        
         Ray ray = Ray{.origin=m_camera.position(), .direction=m_camera.get_ray(x, y)};
         auto total = Vec4<u32>(0, 0, 0, 0);
         auto hit_count = 0;
         auto multiplier = 1.f;
-        u32 seed = x + y * window_width;
-        
+        u32 seed = x + y * window_width + (m_camera.frame_index << 16);
 
         for (i32 bounce = max_bounces; bounce > 0; bounce--) {
-            std::optional<HitPayload> payload = this->m_objects.hit(ray, 0.01f, std::numeric_limits<f32>::max());
+            std::optional<HitPayload> payload = this->m_objects.closest_hit(ray, 0.01f, std::numeric_limits<f32>::max());
             if (payload.has_value()) {
                 seed += bounce;
-                f32 light_factor = 1.0f;
-                ray.origin = payload->hit_position + Vec3(payload->normal).scale(0.01);
+                ray.origin = payload->hit_position;
 
-                m_lights.for_each(
-                    [&](const Hittable auto& light){
-                        Ray shadow_ray;
-                        shadow_ray.origin=ray.origin;
-                        shadow_ray.direction = light.position() - shadow_ray.origin;
-                        auto p = m_objects.hit(shadow_ray, 0.01f, std::numeric_limits<f32>::max());               
-                        if (p.has_value()) {
-                            light_factor = 0.5;
-                            if (expose_) {
-                                expose[fmt::format("{}",p->hit_position)] = 0;
-                            }
-                        }
-                    }
-                );
-                auto rand_vector = Vec3<f32>::random(seed).normalize();
-                // if (rand_vector.dot(payload->normal) < 0.0f) {
-                //     rand_vector = -rand_vector;
-                // }
-                ray.direction = payload->normal;
-                hit_count += 1;
-                // total += payload->object_color.scale(multiplier * light_factor).cast<u32>();
+                f32 light_intensity = 0;
+                u32 light_count = 0;
                 
-                // total += Vec4<f32>(payload->normal.x, payload->normal.y, payload->normal.z, 0.f).shift(1.f).scale(1.f/2.f).scale(255).floor<u32>();
-                total = light_factor == 0.5 ? Vec4<u32>(0, 0, 0, 0) : Vec4<u32>(255, 255, 255, 255);
+                for (const auto& light: m_lights) {
+                    auto ret = std::visit(overloaded {
+                        [&](const PointLight& light) -> f32 {
+                            Ray shadow_ray;
+                            shadow_ray.origin = ray.origin;
+                            shadow_ray.direction = (light.position - shadow_ray.origin).normalize();
+                            auto p = m_objects.any_hit(shadow_ray, 0.01f, std::numeric_limits<f32>::max());               
+                            // if (p.has_value()) {
+                            //     return -1.f;
+                            // } else {
+                            return std::max(payload->normal.dot(shadow_ray.direction), 0.0f);  // == cos(angle)
+                            // }
+                        }
+                    }, light);
 
-                if (!expose_ && expose.find(fmt::format("", payload->hit_position)) != expose.end()) {
-                    total = Vec4<u32>(255, 0, 0, 255);
-                    fmt::println("exposed ?");
+                    if (ret > 0) {
+                        light_intensity += ret;
+                        light_count += 1;
+                    }
+                }
+                
+                if (light_count > 0) {
+                    light_intensity /= light_count;
                 }
 
-                
-                break;
+
+                Vec3<f32> rand_vector = Vec3<f32>::random(seed);
+                ray.direction = payload->normal + rand_vector;
+                if (ray.direction.dot(rand_vector) < 0) {
+                    rand_vector = -rand_vector;
+                }
+                hit_count += 1;
+                total += payload->object_color.scale(multiplier * light_intensity).cast<u32>();
+                // total += Vec4<f32>(payload->normal.x, payload->normal.y, payload->normal.z, 0.f).shift(1.f).scale(1.f/2.f).scale(255).floor<u32>();
+                // total = light_factor == 0.5 ? Vec4<u32>(128, 128, 128, 128) : Vec4<u32>(255, 255, 255, 255);
                 multiplier *= 0.3;
             } else {
                 hit_count += 1;
@@ -106,45 +118,41 @@ public:
                 }
                 auto a = 0.5 * ((f32)ray.direction.y + 1.0);
 
-                total += (Vec4<u32>(255, 255, 255, 255).scale(1.0 - a) + Vec4<u32>(127, 0.9 * 255, 255, 255).scale(a)).scale(multiplier);
+                // total += (Vec4<u32>(255, 255, 255, 255).scale(1.0 - a) + Vec4<u32>(127, 0.9 * 255, 255, 255).scale(a)).scale(multiplier);
+                total += Vec4<u32>();
                 
                 break;
             }
 
         }
         
-        image[x + y * window_width] = total.clamp(0, 255).cast<u8>();
-
-
-
-
+        return total.clamp(0, 255).cast<u8>();
     }
 
 
-    void render(std::array<Vec4<u8>, window_height * window_width>& image) {
+    void render() {
 
-        // BS::thread_pool thread_pool(8);
+        BS::thread_pool thread_pool(8);
+        for (i32 y = window_height - 1; y >= 0; y--) {
+            thread_pool.push_loop(window_width, [this, y](const int a, const int b) {
+                for (u32 x = a; x < b; x++) {
+                    Vec4<u8> color = per_pixel(x, y, 10);
+                    m_camera.accumulation_data->operator[](x + y * window_width) += color.cast<u32>();
+                    Vec4<u32> accumulated_color = m_camera.accumulation_data->operator[](x + y * window_width);
+                    accumulated_color = (accumulated_color.scale(1.f/static_cast<f32>(m_camera.frame_index))).clamp(0, 255);
+                    m_camera.image->operator[](x + y * window_width) = accumulated_color.cast<u8>(); 
+                }
+            });
+        }
+        thread_pool.wait_for_tasks();
+        m_camera.frame_index += 1;
+
+        // std::vector<Vec3<f32>> expose;
         // for (i32 y = window_height - 1; y >= 0; y--) {
-        //     thread_pool.push_loop(window_width, [this, y, &image](const int a, const int b) {
-        //         for (u32 x = a; x < b; x++) {
-        //             per_pixel(x, y, 2, image);
-        //         }
-        //     });
+        //     for (u32 x = 0; x < window_width; x++) {
+        //         per_pixel(x, y, 1, image, expose);
+        //     }
         // }
-        // thread_pool.wait_for_tasks();
-        std::unordered_map<std::string, int> expose;
-        for (i32 y = window_height - 1; y >= 0; y--) {
-            for (u32 x = 0; x < window_width; x++) {
-                per_pixel(x, y, 2, image, expose, true);
-            }
-        }
-
-        for (i32 y = window_height - 1; y >= 0; y--) {
-            for (u32 x = 0; x < window_width; x++) {
-                per_pixel(x, y, 2, image, expose, false);
-            }
-        }
-
 
     }
 };  

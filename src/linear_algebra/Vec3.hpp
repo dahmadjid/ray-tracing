@@ -13,6 +13,13 @@ template<typename T>
 Vec3<T>::Vec3(T x, T y, T z): x(x), y(y), z(z) {}
 
 template<typename T>
+Vec3<T>::Vec3(): x(static_cast<T>(0)), y(static_cast<T>(0)), z(static_cast<T>(0)) {}
+
+template<typename T>
+Vec3<T>::Vec3(T value): x(value), y(value), z(value) {}
+
+
+template<typename T>
 T Vec3<T>::dot(const Vec3<T>& rhs) const {
     return this->x * rhs.x + this->y * rhs.y + this->z * rhs.z;
 }
@@ -107,7 +114,7 @@ struct fmt::formatter<Vec3<T>> : formatter<std::string> {
 };
 
 template<typename T>
-Vec3<float> Vec3<T>::random(uint32_t& seed) {
+Vec3<float> Vec3<T>::random(u32& seed) {
     return Vec3<float>(
         rand_float(seed) * 2 - 1,
         rand_float(seed) * 2 - 1,

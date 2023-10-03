@@ -16,6 +16,7 @@ struct Vec4 {
     T z;
     
     Vec4(): w(0), x(0), y(0), z(0) {}
+    explicit Vec4(T value): w(value), x(value), y(value), z(value) {}
     Vec4(T w, T x, T y, T z): w(w), x(x), y(y), z(z) {}
     Vec4(T w, const Vec3<T>& v): w(w), x(v.x), y(v.y), z(v.z) {}
     Vec4(const Vec3<T>& v, T z): w(v.x), x(v.y), y(v.z), z(z) {}
