@@ -113,6 +113,10 @@ struct Vec3 {
     */
     void operator/=(const Vec3<T>& rhs);
 
+    template<typename U>
+    Vec3<U> cast();
+    
+    Vec3<T>& clamp(T min, T max);
 
 };
 

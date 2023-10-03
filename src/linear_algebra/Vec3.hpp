@@ -153,3 +153,21 @@ void Vec3<T>::operator/=(const Vec3<T>& rhs) {
     this->y /= rhs.y; 
     this->z /= rhs.z;
 }
+
+template<typename T>
+template<typename U>
+Vec3<U> Vec3<T>::cast() {
+    return Vec3<U>(
+        static_cast<U>(this->x),
+        static_cast<U>(this->y),
+        static_cast<U>(this->z)
+    );
+}
+
+template<typename T>
+Vec3<T>& Vec3<T>::clamp(T min, T max) {
+    this->x = std::max(std::min(this->x, max), min);
+    this->y = std::max(std::min(this->y, max), min);
+    this->z = std::max(std::min(this->z, max), min);
+    return *this;
+}

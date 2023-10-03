@@ -17,9 +17,14 @@ namespace RayTracer {
 
 
 struct Material {
-    Vec4<u8> albedo;
+    Vec3<f32> albedo;
     float roughness = 0.0f;
     float metalic = 0.0f;
+    Vec3<f32> emission_color;
+    float emission_power = 0.0f;
+    Vec3<f32> get_emission() {
+        return Vec3(emission_color).scale(emission_power);
+    };
 };
 
 struct HitPayload {
