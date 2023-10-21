@@ -171,3 +171,5 @@ Vec3<T>& Vec3<T>::clamp(T min, T max) {
     this->z = std::max(std::min(this->z, max), min);
     return *this;
 }
+
+

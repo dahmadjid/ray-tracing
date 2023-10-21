@@ -24,14 +24,14 @@ class Camera {
 public:
     std::unique_ptr<std::array<Vec4<u8>, window_width * window_height>> image;
     std::unique_ptr<std::array<Vec3<f32>, window_height * window_width>> ray_directions;
-    std::unique_ptr<std::array<Vec4<u32>, window_width * window_height>> accumulation_data;
+    std::unique_ptr<std::array<Vec3<f32>, window_width * window_height>> accumulation_data;
     u32 frame_index = 1;
     
     Camera(f32 vfov, Vec3<f32> position, f32 pitch, f32 yaw) :  
         m_position(position),
         image(std::make_unique<std::array<Vec4<u8>, window_height * window_width>>()),
         ray_directions(std::make_unique<std::array<Vec3<f32>, window_height * window_width>>()),
-        accumulation_data(std::make_unique<std::array<Vec4<u32>, window_width * window_height>>()) 
+        accumulation_data(std::make_unique<std::array<Vec3<f32>, window_width * window_height>>()) 
     {
 
         f32 theta = to_radians(vfov);
@@ -69,20 +69,20 @@ public:
     void update_x_position(f32 x) {
         auto up_dir = Vec3(0.0f, 1.0f, 0.0f);
         m_position = m_position + m_z_axis.cross(up_dir).scale(x);
-        accumulation_data->fill(Vec4<u32>());
+        accumulation_data->fill(Vec3<f32>());
         this->frame_index = 1;
 
     }
 
     void update_y_position(f32 y) {
         m_position.y += y;
-        accumulation_data->fill(Vec4<u32>());
+        accumulation_data->fill(Vec3<f32>());
         this->frame_index = 1;
     }
     
     void update_z_position(f32 z) {
         m_position = m_position + Vec3(m_z_axis).scale(z);
-        accumulation_data->fill(Vec4<u32>());
+        accumulation_data->fill(Vec3<f32>());
         this->frame_index = 1;
     }
 
@@ -91,7 +91,7 @@ public:
         auto right_direction = m_z_axis.cross(up_dir).normalize();
         auto up = m_z_axis.cross(right_direction).normalize();
         m_z_axis.rotate(Quaternion<f32>::angle_axis(-pitch_delta_radians, right_direction).cross(Quaternion<f32>::angle_axis(yaw_delta_radians, up)).normalize());
-        accumulation_data->fill(Vec4<u32>());
+        accumulation_data->fill(Vec3<f32>());
         this->frame_index = 1;
     }
 

@@ -15,16 +15,39 @@
 
 namespace RayTracer {
 
+// ::begin parameters
+// color baseColor .82 .67 .16
+// float metallic 0 1 0
+// float subsurface 0 1 0
+// float specular 0 1 .5
+// float roughness 0 1 .5
+// float specularTint 0 1 0
+// float anisotropic 0 1 0
+// float sheen 0 1 0
+// float sheenTint 0 1 .5
+// float clearcoat 0 1 0
+// float clearcoatGloss 0 1 1
+// ::end parameters
 
 struct Material {
     Vec3<f32> albedo;
-    float roughness = 0.0f;
-    float metalic = 0.0f;
-    Vec3<f32> emission_color;
-    float emission_power = 0.0f;
+    f32 roughness = 0.5f;
+    f32 metalic = 0.0f;
+    f32 emission_power = 0.0f;
+    f32 ior = 1.5f;
+    f32 subsurface = 0.0f;
+    f32 specular = 0.5f;
+    f32 specular_tint = 0.0f;
+    f32 anisotropic = 0.0f;
+    f32 sheen = 0.0f;
+    f32 sheen_tint = 0.5f;
+    f32 clearcoat = 0.0f;
+    f32 clearcoat_gloss = 1.0f;
+
     Vec3<f32> get_emission() {
-        return Vec3(emission_color).scale(emission_power);
+        return Vec3(this->albedo).scale(emission_power);
     };
+
 };
 
 struct HitPayload {
@@ -118,10 +141,10 @@ private:
 
 
 struct PointLight {
-    PointLight(const Vec3<f32>& position, const Vec4<u8>& object_color): 
-        position(position), object_color(object_color) {}
+    PointLight(const Vec3<f32>& position, const Vec3<f32>& color): 
+        position(position), color(color) {}
     Vec3<f32> position;    
-    Vec4<u8> object_color;
+    Vec3<f32> color;
 };
 
 using ObjectsList = HittableList<Sphere>;

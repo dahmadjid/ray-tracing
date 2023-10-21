@@ -35,6 +35,7 @@ file(COPY shaders DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/src")
 add_executable(renderer 
     src/main.cpp
     src/ray-tracing/objects.cpp
+    src/ray-tracing/DisneyBrdf.cpp
     src/utils/MathUtils.cpp
 )
 

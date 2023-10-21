@@ -179,3 +179,39 @@ template<typename T>
 static bool operator==(const Vec3<T>& lhs, const Vec3<T>& rhs) {
     return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
 }
+
+
+
+
+template<typename T>
+static Vec3<T> operator+(const Vec3<T>& lhs, T value) {
+    return Vec3(lhs.x + value, lhs.y + value, lhs.z + value);
+}
+
+template<typename T>
+static Vec3<T> operator-(const Vec3<T>& lhs, T value) {
+    return Vec3(lhs.x - value, lhs.y - value, lhs.z - value);
+}
+
+template<typename T>
+static Vec3<T> operator*(const Vec3<T>& lhs, T value) {
+    return Vec3(lhs.x * value, lhs.y * value, lhs.z * value);
+}
+
+template<typename T>
+static Vec3<T> operator/(const Vec3<T>& lhs, T value) {
+    return Vec3(lhs.x / value, lhs.y / value, lhs.z / value);
+}
+
+
+template<typename T>
+static Vec3<T> operator+(T value,  const Vec3<T>& lhs) {
+    return Vec3(lhs.x + value, lhs.y + value, lhs.z + value);
+}
+
+template<typename T>
+static Vec3<T> operator*(T value, const Vec3<T>& lhs) {
+    return Vec3(lhs.x * value, lhs.y * value, lhs.z * value);
+}
+
+

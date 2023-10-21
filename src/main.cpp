@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <filesystem>
 #include <fmt/core.h>
 #include <memory>
@@ -20,7 +21,6 @@ Vec3<f32> u8_color_to_float(Vec3<u8>&& color) {
 }
 
 int main() {
-    // image width and height needs to be the same as window size
     // window is not resizable
 
     Camera<1920, 1080> cam(45, Vec3(0.f, 0.f, 10.f), 0, 0);
@@ -29,24 +29,24 @@ int main() {
     Scene scene(cam);
 
     scene.add_object(Sphere(
-        Vec3<f32>(2.f,  14.f, 2.f),
-        10.0f,
+        Vec3<f32>(25.f,  25.f, 25.f),
+        25.0f,
         Material{
             .albedo = Vec3<f32>(1.0f),
             .roughness = 1.0f,
-            .metalic = 0.0f,
-            .emission_color = Vec3<f32>(1.0f),
-            .emission_power = 3.0f
+            .metalic = 0.1f,
+            .emission_power = 20.0f,
         })
     );
+
 
     scene.add_object(Sphere(
         Vec3<f32>(1.1f,  0.f, 0.f),
         1.0f,
         Material{
-            .albedo = u8_color_to_float(Vec3<u8>(255, 20, 0)),
-            .roughness = 1.0f,
-            .metalic = 0.0f,
+            .albedo = u8_color_to_float(Vec3<u8>(25, 0, 200)),
+            .roughness = .0f,
+            .metalic = 1.f,
         })
     );
 
@@ -56,7 +56,7 @@ int main() {
         1.0f,
         Material{
             .albedo = u8_color_to_float(Vec3<u8>(25, 0, 200)),
-            .roughness = .3f,
+            .roughness = 0.5f,
             .metalic = 0.0f,
         })
     );
@@ -67,18 +67,17 @@ int main() {
         Material{
             .albedo = u8_color_to_float(Vec3<u8>(170, 180, 190)),
             .roughness = 1.0f,
-            .metalic = 0.0f
+            .metalic = 0.0f,
         })
     );
 
     while(!w.should_close()) {
-        scene.render(5);
+        scene.render(10);
         r.update_image(reinterpret_cast<u8*>(cam.image->data()));
         r.draw_frame();
         glfwPollEvents();
     }
     
     r.wait_for_device_idle();
-
 
 }
