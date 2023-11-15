@@ -25,10 +25,6 @@ public:
 
     };
 
-    __attribute__((always_inline)) inline int should_close(){
-        return glfwWindowShouldClose(m_glfw_window);
-    }
-
     ~Window() {
         glfwDestroyWindow(m_glfw_window);
         glfwTerminate();

@@ -7,3 +7,6 @@ venv
 compile_commands.json
 CMakeUserPresets.json
 *.spv
+libs
+out
+.vs

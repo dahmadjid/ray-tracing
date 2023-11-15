@@ -8,7 +8,11 @@
 #include <set>
 #include <fmt/format.h>
 #include <GLFW/glfw3.h>
+#ifdef WIN32
+#define string_VkResult(x) ""
+#else
 #include <vulkan/vk_enum_string_helper.h>
+#endif
 #include <algorithm>
 #include <cstring>
 #include <iostream>

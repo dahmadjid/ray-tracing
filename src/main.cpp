@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <filesystem>
 #include <fmt/core.h>
 #include <memory>
 #include "linear_algebra/Vec3.decl.hpp"
@@ -14,7 +13,7 @@
 
 using namespace RayTracer;
 
-
+  
 
 Vec3<f32> u8_color_to_float(Vec3<u8>&& color) {
     return Vec3<f32>(color.x / 255.0f, color.y / 255.0f, color.z / 255.0f);
@@ -22,12 +21,10 @@ Vec3<f32> u8_color_to_float(Vec3<u8>&& color) {
 
 int main() {
     // window is not resizable
-
-    Camera<1920, 1080> cam(45, Vec3(0.f, 0.f, 10.f), 0, 0);
+    Camera<1280, 720> cam(45, Vec3(0.f, 0.f, 10.f), 0, 0);
     Window w(cam);
     auto r = renderer::Renderer(w);
     Scene scene(cam);
-
     scene.add_object(Sphere(
         Vec3<f32>(25.f,  25.f, 25.f),
         25.0f,
@@ -71,7 +68,7 @@ int main() {
         })
     );
 
-    while(!w.should_close()) {
+    while(!glfwWindowShouldClose(w.m_glfw_window)) {
         scene.render(10);
         r.update_image(reinterpret_cast<u8*>(cam.image->data()));
         r.draw_frame();
