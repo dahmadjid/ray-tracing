@@ -61,16 +61,16 @@ void vec4_equal(T v1, U v2) {
 }
 
 void mat3_equal(Mat3<f32> m1, mat3 m2) {
-    for (u32 i = 0; i < 3; i++) {
-        for (u32 j = 0; j < 3; j++) {
+    for (i32 i = 0; i < 3; i++) {
+        for (i32 j = 0; j < 3; j++) {
             equal(m1.get(i, j), m2[i][j]);
         }
     }
 }
 
 void mat4_equal(Mat4<f32> m1, mat4 m2) {
-    for (u32 i = 0; i < 4; i++) {
-        for (u32 j = 0; j < 4; j++) {
+    for (i32 i = 0; i < 4; i++) {
+        for (i32 j = 0; j < 4; j++) {
             equal(m1.get(i, j), m2[i][j]);
         }
     }
@@ -82,12 +82,12 @@ void mat4_equal(Mat4<f32> m1, mat4 m2) {
 
 TEST_CASE("VEC4: DOT") {
 
-    auto a = Vec4<f32>(19.2, 12., 112., 42.);
-    auto b = Vec4<f32>(20.5, 33., 32., 3.1231);
+    auto a = Vec4<f32>(19.2f, 12.f, 112.f, 42.f);
+    auto b = Vec4<f32>(20.5f, 33.f, 32.f, 3.1231f);
     auto c = a.dot(b);
 
-    auto a_glm = vec4(19.2, 12., 112., 42.);
-    auto b_glm = vec4(20.5, 33., 32., 3.1231);
+    auto a_glm = vec4(19.2f, 12.f, 112.f, 42.f);
+    auto b_glm = vec4(20.5f, 33.f, 32.f, 3.1231f);
     auto c_glm = glm::dot(a_glm, b_glm);
 
     equal(c, c_glm);
@@ -96,15 +96,15 @@ TEST_CASE("VEC4: DOT") {
 
 
 TEST_CASE("VEC4: LENGTH") {
-    auto a = Vec4<f32>(19.2, 12., 112., 42.);
-    auto a_glm = vec4(19.2, 12., 112., 42.);
+    auto a = Vec4<f32>(19.2f, 12.f, 112.f, 42.f);
+    auto a_glm = vec4(19.2f, 12.f, 112.f, 42.f);
     equal(a.length(), glm::length(a_glm));
 }
 
 
 TEST_CASE("VEC4: SHIFT SCALE") {
-    auto a = Vec4<f32>(19.2, 12., 112., 42.);
-    auto a_glm = vec4(19.2, 12., 112., 42.);
+    auto a = Vec4<f32>(19.2f, 12.f, 112.f, 42.f);
+    auto a_glm = vec4(19.2f, 12.f, 112.f, 42.f);
     vec4_equal(Vec4(a).scale(1.921319f), a_glm * 1.921319f);
     vec4_equal(Vec4(a).shift(1.921319f), a_glm + 1.921319f);
     vec4_equal(Vec4(a).scale(1.f/1.921319f), a_glm / 1.921319f);
@@ -113,11 +113,11 @@ TEST_CASE("VEC4: SHIFT SCALE") {
 
 
 TEST_CASE("VEC4: ADD MINUS MULTIPLY DIVIDE") {
-    auto a = Vec4<f32>(19.2, 12., 112., 42.);
-    auto b = Vec4<f32>(20.5, 33., 32., 3.1231);
+    auto a = Vec4<f32>(19.2f, 12.f, 112.f, 42.f);
+    auto b = Vec4<f32>(20.5f, 33.f, 32.f, 3.1231f);
 
-    auto a_glm = vec4(19.2, 12., 112., 42.);
-    auto b_glm = vec4(20.5, 33., 32., 3.1231);
+    auto a_glm = vec4(19.2f, 12.f, 112.f, 42.f);
+    auto b_glm = vec4(20.5f, 33.f, 32.f, 3.1231f);
 
     vec4_equal(a + b,  a_glm + b_glm);
     vec4_equal(a - b,  a_glm - b_glm);
@@ -132,11 +132,11 @@ TEST_CASE("VEC4: ADD MINUS MULTIPLY DIVIDE") {
 // Vec3 tests
 
 TEST_CASE("VEC3: DOT") {
-    auto a = Vec3(1.5, 2.5, 10.);
-    auto b = Vec3(20.5, 3., 3.);
+    auto a = Vec3(1.5f, 2.5f, 10.f);
+    auto b = Vec3(20.5f, 3.f, 3.f);
     auto c = a.dot(b);
 
-    auto a_glm = vec3(1.5, 2.5, 10.);
+    auto a_glm = vec3(1.5f, 2.5f, 10.f);
     auto b_glm = vec3(20.5, 3., 3.);
     auto c_glm = glm::dot(a_glm, b_glm);
 
@@ -145,11 +145,11 @@ TEST_CASE("VEC3: DOT") {
 
 
 TEST_CASE("VEC3: CROSS") {
-    auto a = Vec3(1.5, 2.5, 10.);
-    auto b = Vec3(20.5, 3., 3.);
+    auto a = Vec3(1.5f, 2.5f, 10.f);
+    auto b = Vec3(20.5f, 3.f, 3.f);
     auto c = a.cross(b);
 
-    auto a_glm = vec3(1.5, 2.5, 10.);
+    auto a_glm = vec3(1.5f, 2.5f, 10.f);
     auto b_glm = vec3(20.5, 3., 3.);
     auto c_glm = glm::cross(a_glm, b_glm);
 
@@ -159,28 +159,28 @@ TEST_CASE("VEC3: CROSS") {
 
 
 TEST_CASE("VEC3: LENGTH") {
-    auto a = Vec3(5.0, 3.0, 1.0);
-    auto a_glm = vec3(5.0, 3.0, 1.0);
+    auto a = Vec3(5.0f, 3.0f, 1.0f);
+    auto a_glm = vec3(5.0f, 3.0f, 1.0f);
     equal(a.length(), glm::length(a_glm));
 }
 
 
 TEST_CASE("VEC3: SHIFT SCALE") {
-    auto a = Vec3<f32>(5.0, 3.0, 1.0);
-    auto a_glm = vec3(5.0, 3.0, 1.0);
-    vec3_equal(Vec3(a).scale(1.921319), a_glm * 1.921319f);
-    vec3_equal(Vec3(a).shift(1.921319), a_glm + 1.921319f);
-    vec3_equal(Vec3(a).scale(1/1.921319), a_glm / 1.921319f);
-    vec3_equal(Vec3(a).shift(-1.921319), a_glm - 1.921319f);
+    auto a = Vec3<f32>(5.0f, 3.0f, 1.0f);
+    auto a_glm = vec3(5.0f, 3.0f, 1.0f);
+    vec3_equal(Vec3(a).scale(1.921319f), a_glm * 1.921319f);
+    vec3_equal(Vec3(a).shift(1.921319f), a_glm + 1.921319f);
+    vec3_equal(Vec3(a).scale(1/1.921319f), a_glm / 1.921319f);
+    vec3_equal(Vec3(a).shift(-1.921319f), a_glm - 1.921319f);
 }
 
 
 TEST_CASE("VEC3: ADD MINUS MULTIPLY DIVIDE") {
-    auto a = Vec3(1.5, 2.5, 10.);
-    auto b = Vec3(20.5, 3., 3.);
+    auto a = Vec3(1.5f, 2.5f, 10.f);
+    auto b = Vec3(20.5f, 3.f, 3.f);
 
-    auto a_glm = vec3(1.5, 2.5, 10.);
-    auto b_glm = vec3(20.5, 3., 3.);
+    auto a_glm = vec3(1.5f, 2.5f, 10.f);
+    auto b_glm = vec3(20.5f, 3.f, 3.f);
 
     vec3_equal(a + b,  a_glm + b_glm);
     vec3_equal(a - b,  a_glm - b_glm);
@@ -196,9 +196,9 @@ TEST_CASE("VEC3: QUATERNION ROTATION MATRIX") {
     auto a = Vec3<f32>(1., 0., 0.);
     // rotation matrix of 45 degrees from the internet by the (1, 1, 0) axis.
     auto rotation_matrix = Mat3<f32>({
-        0.8535534,  0.1464466,  0.5000000,
-        0.1464466,  0.8535534, -0.500000,
-        -0.5000000,  0.5000000,  0.7071068 
+        0.8535534f,  0.1464466f,  0.5000000f,
+        0.1464466f,  0.8535534f, -0.500000f,
+        -0.5000000f,  0.5000000f,  0.7071068f 
     });
     
     auto axis = Vec3<f32>(1., 1., 0.).normalize();
@@ -219,10 +219,10 @@ TEST_CASE("VEC3: reflect") {
 
 
 TEST_CASE("ROTATION") {
-    f32 pitchDelta = 0.2001231;
-    f32 yawDelta = 0.234;
+    f32 pitchDelta = 0.2001231f;
+    f32 yawDelta = 0.234f;
 
-    auto v1 = Vec3<f32>(1.5, 2.5, 10.);
+    auto v1 = Vec3<f32>(1.5f, 2.5f, 10.f);
     auto v2 = Vec3<f32>(3., 2., 7.);
 
     auto q1 = Quaternion<f32>::angle_axis(-pitchDelta, v1);
@@ -233,7 +233,7 @@ TEST_CASE("ROTATION") {
     auto v3 = v2.rotate(q3);
 
 
-    auto v1_glm = vec3(1.5, 2.5, 10.);
+    auto v1_glm = vec3(1.5f, 2.5f, 10.f);
     auto v2_glm = vec3(3., 2., 7.);
 
     auto q1_glm = glm::angleAxis(-pitchDelta, v1_glm);
@@ -260,10 +260,10 @@ TEST_CASE("ROTATION") {
 
 TEST_CASE("MAT3: MAT-MAT") {
     Mat3<f32> a{.data={1, 2, 3, 4, 5, 6, 7, 8, 9}};
-    Mat3<f32> b{.data={1.123, 2.12, 3.45, 4.32, 5.997, 6.12, 72.12, 8.23, 9.123}};
+    Mat3<f32> b{.data={1.123f, 2.12f, 3.45f, 4.32f, 5.997f, 6.12f, 72.12f, 8.23f, 9.123f}};
     
     mat3 a_glm(1, 2, 3, 4, 5, 6, 7, 8, 9);
-    mat3 b_glm(1.123, 2.12, 3.45, 4.32, 5.997, 6.12, 72.12, 8.23, 9.123);
+    mat3 b_glm(1.123f, 2.12f, 3.45f, 4.32f, 5.997f, 6.12f, 72.12f, 8.23f, 9.123f);
 
     mat3_equal(a.mat_mul(b), a_glm * b_glm);
 }
@@ -272,11 +272,11 @@ TEST_CASE("MAT3: MAT-MAT") {
 // Mat3 tests
 
 TEST_CASE("MAT3: MAT-VEC") {
-    Mat3<f32> a{.data={1.123, 2.12, 3.45, 4.32, 5.997, 6.12, 72.12, 8.23, 9.123}};
-    auto b = Vec3<f32>(1.5, 2.5, 10.);
+    Mat3<f32> a{.data={1.123f, 2.12f, 3.45f, 4.32f, 5.997f, 6.12f, 72.12f, 8.23f, 9.123f}};
+    auto b = Vec3<f32>(1.5f, 2.5f, 10.f);
     
-    mat3 a_glm(1.123, 2.12, 3.45, 4.32, 5.997, 6.12, 72.12, 8.23, 9.123);
-    auto b_glm = vec3(1.5, 2.5, 10.);
+    mat3 a_glm(1.123f, 2.12f, 3.45f, 4.32f, 5.997f, 6.12f, 72.12f, 8.23f, 9.123f);
+    auto b_glm = vec3(1.5f, 2.5f, 10.f);
 
     vec3_equal(a.vec_mul(b), a_glm * b_glm);
 }
@@ -284,8 +284,8 @@ TEST_CASE("MAT3: MAT-VEC") {
 
 
 TEST_CASE("MAT3: inverse") {
-    Mat3<f32> a{.data={1.123, 2.12, 3.45, 4.32, 5.997, 6.12, 72.12, 8.23, 9.123}};
+    Mat3<f32> a{.data={1.123f, 2.12f, 3.45f, 4.32f, 5.997f, 6.12f, 72.12f, 8.23f, 9.123f}};
     
-    mat3 a_glm(1.123, 2.12, 3.45, 4.32, 5.997, 6.12, 72.12, 8.23, 9.123);
+    mat3 a_glm(1.123f, 2.12f, 3.45f, 4.32f, 5.997f, 6.12f, 72.12f, 8.23f, 9.123f);
     mat3_equal(a.inverse().value(), glm::inverse(a_glm));
 }
