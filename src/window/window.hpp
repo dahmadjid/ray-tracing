@@ -6,24 +6,29 @@
 #include <GLFW/glfw3.h>
 
 
-template<u32 window_width, u32 window_height>
 class Window {
 public:
     GLFWwindow* m_glfw_window;
-    RayTracer::Camera<window_width, window_height>& cam; 
+    RayTracer::Camera& cam; 
     
-    
-    Window(RayTracer::Camera<window_width, window_height>& cam): cam(cam) {
+    bool framebuffer_resized = false;
+
+
+    Window(RayTracer::Camera& cam): cam(cam) {
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        m_glfw_window = glfwCreateWindow(window_width, window_height, "Vulkan window", nullptr, nullptr);
+        m_glfw_window = glfwCreateWindow((i32)cam.window_width, (i32)cam.window_height, "Vulkan", nullptr, nullptr);
         
         glfwSetWindowUserPointer(m_glfw_window, this);
         glfwSetKeyCallback(m_glfw_window, Window::key_callback);
-
-
+        glfwSetFramebufferSizeCallback(m_glfw_window, this->frame_buffer_resize_event);
     };
+
+    static void frame_buffer_resize_event(GLFWwindow* window, int width, int height) {
+        Window* this_window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+        this_window->cam.resize_camera(width, height);
+        this_window->framebuffer_resized = true;
+    }
 
     ~Window() {
         glfwDestroyWindow(m_glfw_window);

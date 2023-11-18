@@ -7,8 +7,13 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (WIN32)
 else()
-    add_compile_options(-Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20)
-    add_link_options(-fuse-ld=lld)
+    if(CMAKE_BUILD_TYPE STREQUAL "Release") 
+        add_compile_options(-Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20)
+        add_link_options(-fuse-ld=lld)
+    else()
+        add_compile_options(-g -fsanitize=address -Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20)
+        add_link_options(-fuse-ld=lld -fsanitize=address )
+    endif()
 endif()
 
 find_package(Vulkan REQUIRED)
@@ -53,8 +58,8 @@ set(LINEAR_ALGBERA_HEADERS
     src/ray-tracing/DisneyBrdf.cpp
     src/utils/MathUtils.cpp
     
+    src/renderer/renderer.cpp
     src/renderer/renderer.hpp
-    src/renderer/renderer.decl.hpp
     src/renderer/vk_enum_string_helper.hpp
     src/window/window.hpp
     

@@ -18,8 +18,7 @@ Vec3<f32> u8_color_to_float(Vec3<u8>&& color) {
 }
 
 int main() {
-    // window is not resizable
-    Camera<1280, 720> cam(45, Vec3(0.f, 0.f, 10.f), 0, 0);
+    Camera cam(45, Vec3(0.f, 0.f, 10.f), 0, 0, 1280, 720);
     Window w(cam);
 
     auto r = renderer::Renderer(w);
@@ -70,10 +69,18 @@ int main() {
     
 
     while(!glfwWindowShouldClose(w.m_glfw_window)) {
-        scene.render(2);
-        r.update_image(reinterpret_cast<u8*>(cam.image->data()));
-        r.draw_frame();
         glfwPollEvents();
+
+        if (w.framebuffer_resized) {
+            r.recreate_swap_chain();
+            w.framebuffer_resized = false;
+            r.wait_for_device_idle();
+            continue;
+        }
+
+        scene.render(2);
+        r.update_image(reinterpret_cast<u8*>(cam.image.data()));
+        r.draw_frame();
     }
     
     r.wait_for_device_idle();

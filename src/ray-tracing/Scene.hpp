@@ -37,14 +37,13 @@ if (std::isnan(number)) {\
 
 namespace RayTracer {
 
-template<u32 window_width, u32 window_height>
 class Scene {
     ObjectsList m_objects;
     LightList m_lights;
 public:
-    Camera<window_width, window_height>& m_camera;
+    Camera& m_camera;
     
-    Scene(Camera<window_width, window_height>& camera) : m_camera(camera) {} 
+    Scene(Camera& camera) : m_camera(camera) {} 
     
     Scene(Scene&) = delete;
     Scene& operator=(Scene&) = delete;
@@ -72,7 +71,7 @@ public:
         auto light = Vec3<f32>(0.0f, 0.0f, 0.0f);
         Vec3<f32> contribution = Vec3<f32>(1.0f);
         Vec3<f32> spec_contribution = Vec3<f32>(1.0f);
-        u32 seed = x + y * window_width + (m_camera.frame_index << 16);
+        u32 seed = x + y * m_camera.window_width + (m_camera.frame_index << 16);
 
         std::optional<HitPayload> payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
         std::optional<HitPayload> spec_payload = payload;
@@ -190,19 +189,19 @@ public:
     void render(u32 max_bounces) {
         this->m_camera.calculate_ray_directions();
         BS::thread_pool thread_pool(8);
-        for (i32 y = window_height - 1; y >= 0; y--) {
-            thread_pool.push_loop(window_width, [this, y, max_bounces](const int a, const int b) {
+        for (i32 y = m_camera.window_height - 1; y >= 0; y--) {
+            thread_pool.push_loop(m_camera.window_width, [this, y, max_bounces](const int a, const int b) {
                 for (int x = a; x < b; x++) {
                     
                     Vec3<f32> color = per_pixel(x, y, max_bounces);
-                    m_camera.accumulation_data->operator[](x + y * window_width) += color;
-                    auto light =  m_camera.accumulation_data->operator[](x + y * window_width) / (f32)m_camera.frame_index;
-                    m_camera.image->operator[](x + y * window_width) = Vec4<u32>(
-                                                                            (u32)(light.x * 255.0f), 
-                                                                            (u32)(light.y * 255.0f), 
-                                                                            (u32)(light.z * 255.0f), 
-                                                                            255
-                                                                        ).clamp(0, 255).cast<u8>();; 
+                    m_camera.accumulation_data[x + y * m_camera.window_width] += color;
+                    auto light =  m_camera.accumulation_data[x + y * m_camera.window_width] / (f32)m_camera.frame_index;
+                    m_camera.image[x + y * m_camera.window_width] = Vec4<u32>(
+                                                                    (u32)(light.x * 255.0f), 
+                                                                    (u32)(light.y * 255.0f), 
+                                                                    (u32)(light.z * 255.0f), 
+                                                                    255
+                                                                ).clamp(0, 255).cast<u8>();; 
 
                 }
             });
@@ -211,8 +210,8 @@ public:
         m_camera.frame_index += 1;
 
         // std::vector<Vec3<f32>> expose;
-        // for (i32 y = window_height - 1; y >= 0; y--) {
-        //     for (u32 x = 0; x < window_width; x++) {
+        // for (i32 y = m_camera.window_height - 1; y >= 0; y--) {
+        //     for (u32 x = 0; x < m_camera.window_width; x++) {
         //         per_pixel(x, y, 1, image, expose);
         //     }
         // }
