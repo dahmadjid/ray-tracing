@@ -20,7 +20,7 @@ float smithG_GGX_aniso(float NdotV, float VdotX, float VdotY, float ax, float ay
 
 Vec3<f32> mon2lin(const Vec3<f32>& albedo);
 
-std::optional<Vec3<f32>> BRDF(const Vec3<f32>& L, const Vec3<f32>& V, const Vec3<f32>& N, const RayTracer::Material& material);
+std::optional<Vec3<f32>> BRDF(const Vec3<f32>& L, const Vec3<f32>& V, const Vec3<f32>& N, RayTracer::Material material);
 
 
 }

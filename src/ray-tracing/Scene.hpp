@@ -67,17 +67,19 @@ public:
         u32 y, 
         u32 max_bounces 
     ) const {
-        auto light_dir = Vec3<f32>(-1, -1, -1);
         Ray ray = Ray{.origin=m_camera.position(), .direction=m_camera.get_ray(x, y)};
+        Ray spec_ray = Ray{.origin=m_camera.position(), .direction=m_camera.get_ray(x, y)};
         auto light = Vec3<f32>(0.0f, 0.0f, 0.0f);
         Vec3<f32> contribution = Vec3<f32>(1.0f);
+        Vec3<f32> spec_contribution = Vec3<f32>(1.0f);
         u32 seed = x + y * window_width + (m_camera.frame_index << 16);
 
+        std::optional<HitPayload> payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
+        std::optional<HitPayload> spec_payload = payload;
         for (u32 bounce = 0; bounce < max_bounces; bounce++) {
-            std::optional<HitPayload> payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
             
-            if (!payload.has_value()) {
-                // light += Vec3<f32>(0.6f, 0.7f, 0.9f) * contribution;
+            if (!payload.has_value() || !spec_payload.has_value()) {
+                light += Vec3<f32>(0.6f, 0.7f, 0.9f) * contribution;
                 break;
             }
             // bounce in a random direction ===========================================
@@ -90,27 +92,50 @@ public:
             ray.origin = payload->hit_position;
             ray.direction = (payload->normal+rand_vector).normalize();
             Vec3<f32> light_vector = ray.direction;
-
-        
             light += payload->material.get_emission() * contribution;
 
             auto brdf = DisneyBRDF::BRDF(light_vector, view_vector, payload->normal, payload->material);
 
             if (brdf.has_value()) {
-                contribution *= (*brdf); 
+                contribution *= (*brdf) * std::abs(light_vector.dot(view_vector)); 
             } else {
                 return Vec3<f32>(1.0f, 0, 0);
             }
 
-            if (contribution.x < 0.01) {
-                contribution.x = 0;
-            }
-            if (contribution.y < 0.01) {
-                contribution.y = 0;
-            }
-            if (contribution.z < 0.01) {
-                contribution.z = 0;
-            }
+            {
+                  
+                Vec3<f32> rand_vector = Vec3<f32>::random(seed);
+                if (payload->normal.dot(rand_vector) < 0) {
+                    rand_vector = -rand_vector;
+                }
+    
+                Vec3<f32> view_vector = spec_ray.direction;
+                spec_ray.origin = spec_payload->hit_position;
+                spec_ray.direction = (view_vector.reflect(spec_payload->normal)+rand_vector.scale(1.0f-spec_payload->material.roughness)).normalize();
+                Vec3<f32> light_vector = spec_ray.direction;
+                light += spec_payload->material.get_emission() * spec_contribution;
+
+                auto brdf = DisneyBRDF::BRDF(light_vector, view_vector, spec_payload->normal, spec_payload->material);
+
+                if (brdf.has_value()) {
+                    spec_contribution *= (*brdf) * std::abs(light_vector.dot(view_vector)); 
+                } else {
+                    return Vec3<f32>(1.0f, 0, 0);
+                }
+            }            
+
+            payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
+            spec_payload = this->m_objects.closest_hit(spec_ray, 0.001f, std::numeric_limits<f32>::max());
+            
+            // if (contribution.x < 0.01) {
+            //     contribution.x = 0;
+            // }
+            // if (contribution.y < 0.01) {
+            //     contribution.y = 0;
+            // }
+            // if (contribution.z < 0.01) {
+            //     contribution.z = 0;
+            // }
             // // GGX/Throwbridge-reitz NDF ==============================================
             // f32 roughness_squared = payload->material.roughness * payload->material.roughness;
             // f32 denominator_part = NdotH * NdotH * (roughness_squared - 1) + 1;

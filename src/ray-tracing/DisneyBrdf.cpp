@@ -18,6 +18,17 @@ if (std::isnan(vec.x) || std::isnan(vec.y) || std::isnan(vec.z)) {\
     panic("vec is nan {}", vec);\
 }\
 
+#define CHECK_ZERO(number)\
+if (number == 0) {\
+    panic("number is zero");\
+}\
+
+
+#define CHECK_ZERO_VEC3(vec)\
+if (vec.x == 0 && vec.y == 0 && vec.z == 0)  {\
+    panic("vec is zero {}", vec);\
+}\
+
 
 
 namespace DisneyBRDF {
@@ -65,9 +76,15 @@ f32 GTR1(f32 NdotH, f32 a)
 
 f32 GTR2(f32 NdotH, f32 a)
 {
-    f32 a2 = a*a;
-    f32 t = 1 + (a2-1)*NdotH*NdotH;
-    return a2 / (PI * t*t);
+    float a2     = a*a;
+    float NdotH2 = NdotH*NdotH;
+    
+    float nom    = a2;
+    float denom  = (NdotH2 * (a2 - 1.0f) + 1.0f);
+    denom        = PI * denom * denom;
+    
+	
+    return nom / denom;
 }
 
 f32 GTR2_aniso(f32 NdotH, f32 HdotX, f32 HdotY, f32 ax, f32 ay)
@@ -77,6 +94,8 @@ f32 GTR2_aniso(f32 NdotH, f32 HdotX, f32 HdotY, f32 ax, f32 ay)
 
 f32 smithG_GGX(f32 NdotV, f32 alphaG)
 {
+    
+    alphaG = std::max(alphaG, 0.04f);
     f32 a = alphaG*alphaG;
     f32 b = NdotV*NdotV;
     return 1 / (NdotV + std::sqrt(a + b - a*b));
@@ -99,16 +118,9 @@ static f32 sign(f32 number) {
         return 1.0f;
     }
 }
-std::optional<Vec3<f32>> BRDF(const Vec3<f32>& L, const Vec3<f32>& V, const Vec3<f32>& N, const RayTracer::Material& material )
+std::optional<Vec3<f32>> BRDF(const Vec3<f32>& L, const Vec3<f32>& V, const Vec3<f32>& N, RayTracer::Material material )
 {
-    float s = sign(N.z);
-    float a = -1.0f / (s + N.z);
-    float b = N.x * N.y * a;
-
-    // two arbitrary, orthonormal vectors for the tangent and bitangent
-    Vec3<f32> X = Vec3<f32>(1 + s * sqr(N.x) * a, s * b, -s * N.x);
-    Vec3<f32> Y = Vec3<f32>(b, s + sqr(N.y) * a, -N.y);
-    
+    material.roughness = std::max(material.roughness, 0.04f);
     f32 NdotL = N.dot(L);
     f32 NdotV = N.dot(V);
     if (NdotV <= 0) {
@@ -119,6 +131,7 @@ std::optional<Vec3<f32>> BRDF(const Vec3<f32>& L, const Vec3<f32>& V, const Vec3
     }
 
     Vec3<f32> H = (L+V).normalize();
+    
     f32 NdotH = N.dot(H);
     f32 LdotH = L.dot(H);
 
@@ -135,37 +148,20 @@ std::optional<Vec3<f32>> BRDF(const Vec3<f32>& L, const Vec3<f32>& V, const Vec3
     f32 Fd90 = 0.5f + 2.0f * LdotH*LdotH * material.roughness;
     f32 Fd = mix(1.0f, Fd90, FL) * mix(1.0f, Fd90, FV);
 
-    // Based on Hanrahan-Krueger brdf approximation of isotropic bssrdf
-    // 1.25 scale is used to (roughly) preserve albedo
-    // Fss90 used to "flatten" retroreflection based on roughness
-    f32 Fss90 = LdotH*LdotH*material.roughness;
-    f32 Fss = mix(1.0f, Fss90, FL) * mix(1.0f, Fss90, FV);
-    f32 ss = 1.25f * (Fss * (1.0f / (NdotL + NdotV) - 0.5f) + 0.5f);
-
     // specular
-    f32 aspect = (f32)std::sqrt(1.0f - material.anisotropic * 0.9f);
-    f32 ax = std::max(.001f, sqr(material.roughness)/aspect);
-    f32 ay = std::max(.001f, sqr(material.roughness)*aspect);
-    f32 Ds = GTR2_aniso(NdotH, H.dot(X), H.dot(Y), ax, ay);
+    f32 Ds = GTR1(NdotH, material.roughness);
     f32 FH = SchlickFresnel(LdotH);
     Vec3<f32> Fs = mix(Cspec0, Vec3<f32>(1), FH);
     f32 Gs;
-    Gs  = smithG_GGX_aniso(NdotL, L.dot(X), L.dot(Y), ax, ay);
-    Gs *= smithG_GGX_aniso(NdotV, V.dot(X), V.dot(Y), ax, ay);
+    Gs  = smithG_GGX(NdotL, material.roughness);
+    Gs *= smithG_GGX(NdotV, material.roughness);
 
     // sheen
     Vec3<f32> Fsheen = FH * material.sheen * Csheen;
 
-    // clearcoat (ior = 1.5 -> F0 = 0.04)
-    f32 Dr = GTR1(NdotH, mix(0.1f, .001f, material.clearcoat_gloss));
-    f32 Fr = mix(0.04f, 1.0f, FH);
-    f32 Gr = smithG_GGX(NdotL, .25f) * smithG_GGX(NdotV, .25f);
+    Vec3<f32> brdf =((1/PI) * Fd *Cdlin + Fsheen)
+        * (1-material.metalic) + Ds*Gs*Fs;
 
-    Vec3<f32> brdf = ((1/PI) * mix(Fd, ss, material.subsurface)*Cdlin + Fsheen)
-        * (1-material.metalic)
-        + Ds*Gs*Fs + .25f*material.clearcoat*Gr*Fr*Dr;
-
-    CHECK_NAN_VEC3(brdf);
     return brdf;
 }
 }

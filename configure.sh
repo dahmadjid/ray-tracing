@@ -11,5 +11,3 @@ cmake -Bbuild -S.\
     -DCMAKE_EXPORT_COMPILE_COMMANDS=On\
     -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake\
     -DCMAKE_BUILD_TYPE=Release
-
-cp build/compile_commands.json ..
