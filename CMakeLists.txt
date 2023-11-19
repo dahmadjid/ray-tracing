@@ -8,11 +8,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (WIN32)
 else()
     if(CMAKE_BUILD_TYPE STREQUAL "Release") 
-        add_compile_options(-Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20)
+        add_compile_options(-Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20 -fno-exceptions)
         add_link_options(-fuse-ld=lld)
     else()
-        add_compile_options(-g -fsanitize=address -Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20)
-        add_link_options(-fuse-ld=lld -fsanitize=address )
+        add_compile_options(-g -fsanitize=address -Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20 -fno-exceptions)
+        add_link_options(-fuse-ld=lld -fsanitize=address)
     endif()
 endif()
 
@@ -58,6 +58,7 @@ add_executable(renderer
     src/ray-tracing/objects.cpp
     src/ray-tracing/DisneyBrdf.cpp
     src/utils/MathUtils.cpp
+    src/utils/BMP.cpp
     
     src/renderer/renderer.cpp
     src/renderer/renderer.hpp

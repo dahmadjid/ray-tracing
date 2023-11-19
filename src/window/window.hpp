@@ -1,17 +1,27 @@
 #pragma once
 #include "ray-tracing/Camera.hpp"
+#include "utils/BMP.hpp"
 #include <cstdint>
 #include <fmt/core.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 
+struct FloatKeyControl {
+    int increment_glfw_key;
+    int decrement_glfw_key;
+    float* variable_to_change;
+    float change_step;
+    float min = 0.0f;
+    float max = 1.0f;
+};
+
 class Window {
 public:
     GLFWwindow* m_glfw_window;
     RayTracer::Camera& cam; 
-    
     bool framebuffer_resized = false;
+    std::vector<FloatKeyControl> float_key_controls;
 
 
     Window(RayTracer::Camera& cam): cam(cam) {
@@ -37,10 +47,19 @@ public:
 
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
         Window* this_window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
-
+        static f32 all_pitch_changes = 0;
+        static f32 all_yaw_changes = 0;
+        
         f32 pitch = 0;
         f32 yaw = 0;
         switch(key) {
+            case GLFW_KEY_C:
+                fmt::println("CAMERA = {} {} {}", this_window->cam.position(), all_pitch_changes, all_yaw_changes);
+                break;
+
+            case GLFW_KEY_V:
+                write_bmp_image("render.bmp", this_window->cam.image, this_window->cam.window_width, this_window->cam.window_height);
+                break;
             case GLFW_KEY_DOWN:
                 pitch += 0.1f;
                 break;
@@ -80,9 +99,32 @@ public:
             case GLFW_KEY_E:
                 this_window->cam.update_y_position(-0.5f);
                 break;
+
+            default:
+                for (const auto& key_control: this_window->float_key_controls) {
+                    if (key_control.increment_glfw_key == key) {
+                        if ((*key_control.variable_to_change) < key_control.max) {
+                            auto res = (*key_control.variable_to_change) + key_control.change_step;
+                            (*key_control.variable_to_change) = std::min(res, key_control.max);
+                            this_window->cam.reset_accu_data();
+                            fmt::println("{}", (*key_control.variable_to_change));
+                            break;
+                        } 
+                    } else if (key_control.decrement_glfw_key == key) {
+                        if ((*key_control.variable_to_change) > key_control.min) {
+                            auto res = (*key_control.variable_to_change) - key_control.change_step;
+                            (*key_control.variable_to_change) = std::max(res, key_control.min);
+                            this_window->cam.reset_accu_data();
+                            fmt::println("{}", (*key_control.variable_to_change));
+                            break;
+                        } 
+                    }
+                }
         }
 
         if (pitch != 0 || yaw != 0) {
+            all_pitch_changes += pitch;
+            all_yaw_changes += yaw;
             this_window->cam.rotate(pitch, yaw);
             this_window->cam.calculate_ray_directions();
         }

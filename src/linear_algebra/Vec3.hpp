@@ -10,7 +10,7 @@
 
 
 template<typename T>
-Vec3<T>::Vec3(T x, T y, T z): x(x), y(y), z(z) {}
+constexpr Vec3<T>::Vec3(T x, T y, T z): x(x), y(y), z(z) {}
 
 template<typename T>
 Vec3<T>::Vec3(): x(static_cast<T>(0)), y(static_cast<T>(0)), z(static_cast<T>(0)) {}
@@ -172,4 +172,26 @@ Vec3<T>& Vec3<T>::clamp(T min, T max) {
     return *this;
 }
 
+template<typename T>
+T& Vec3<T>::operator[](int i) {
+    switch(i) {
+        case 0:
+            return this->x;
+        case 1:
+            return this->y;
+        default:
+            return this->z;
+    }
+}
 
+template<typename T>
+T Vec3<T>::operator[](int i) const {
+    switch(i) {
+        case 0:
+            return this->x;
+        case 1:
+            return this->y;
+        default:
+            return this->z;
+    }
+}

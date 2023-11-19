@@ -77,21 +77,18 @@ public:
     void update_x_position(f32 x) {
         auto up_dir = Vec3(0.0f, 1.0f, 0.0f);
         m_position = m_position + m_z_axis.cross(up_dir).scale(x);
-        memset(this->accumulation_data.data(), 0, this->accumulation_data.size() * sizeof(Vec3<f32>));
-        this->frame_index = 1;
+        reset_accu_data();
 
     }
 
     void update_y_position(f32 y) {
         m_position.y += y;
-        memset(this->accumulation_data.data(), 0, this->accumulation_data.size() * sizeof(Vec3<f32>));
-        this->frame_index = 1;
+        reset_accu_data();
     }
     
     void update_z_position(f32 z) {
         m_position = m_position + Vec3(m_z_axis).scale(z);
-        memset(this->accumulation_data.data(), 0, this->accumulation_data.size() * sizeof(Vec3<f32>));
-        this->frame_index = 1;
+        reset_accu_data();
     }
 
     void rotate(f32 pitch_delta_radians, f32 yaw_delta_radians) {
@@ -99,6 +96,10 @@ public:
         auto right_direction = m_z_axis.cross(up_dir).normalize();
         auto up = m_z_axis.cross(right_direction).normalize();
         m_z_axis.rotate(Quaternion<f32>::angle_axis(-pitch_delta_radians, right_direction).cross(Quaternion<f32>::angle_axis(yaw_delta_radians, up)).normalize());
+        reset_accu_data();
+    }
+
+    void reset_accu_data() {
         memset(this->accumulation_data.data(), 0, this->accumulation_data.size() * sizeof(Vec3<f32>));
         this->frame_index = 1;
     }

@@ -76,6 +76,12 @@ public:
         m_hittable_objects.emplace_back(std::forward<T>(hittable_object));
     }
     
+    template<same_as_any<Ts...>  T>
+    T& get_object(u32 index) {
+        return std::get<T>(m_hittable_objects[index]);
+    }
+    
+
     std::optional<HitPayload> closest_hit(const Ray& ray, f32 t_min, f32 t_max) const {
         std::optional<HitPayload> closest_payload = std::nullopt;
         for (const auto& object: m_hittable_objects) {
@@ -132,12 +138,49 @@ public:
         f32 radius, 
         const Material& material
     ) : m_position(position), m_radius(radius), m_material(material) {}
-
-private:
     Vec3<f32> m_position;    
     f32 m_radius = 0;
     Material m_material;
 };
+
+class Box {
+public:
+    std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const;
+    Vec3<f32> position() const { return m_position; }
+    void set_position(const Vec3<f32>& pos) { m_position = pos; }
+    Material material() const { return m_material; }
+    Box(
+        const Vec3<f32>& position, 
+        f32 width, 
+        f32 height, 
+        f32 depth, 
+        f32 pitch,
+        f32 roll,
+        f32 yaw,
+        const Material& material
+    ) : m_position(position), m_material(material), m_pitch(pitch), m_roll(roll), m_yaw(yaw), m_width(width), m_height(height), m_depth(depth), m_halves(width/2, height/2, depth/2) {
+        this->m_box_max = m_position + m_halves;
+        this->m_box_min = m_position - m_halves;
+        
+    }
+
+   
+    Vec3<f32> m_position;    
+    Material m_material;
+    Vec3<f32> m_box_max;
+    Vec3<f32> m_box_min; 
+    f32 m_pitch = 0.0f;
+    f32 m_roll = 0.0f;
+    f32 m_yaw = 0.0f;
+    f32 m_width;
+    f32 m_height;
+    f32 m_depth;
+    Vec3<f32> m_halves;
+};
+
+
+
+
 
 
 struct PointLight {
@@ -147,7 +190,7 @@ struct PointLight {
     Vec3<f32> color;
 };
 
-using ObjectsList = HittableList<Sphere>;
+using ObjectsList = HittableList<Sphere, Box>;
 using LightList = std::vector<std::variant<PointLight>>;
 
 

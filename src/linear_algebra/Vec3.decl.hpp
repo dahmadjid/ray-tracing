@@ -16,7 +16,7 @@ struct Vec3 {
     Vec3();
     explicit Vec3(T value);
 
-    Vec3(T x, T y, T z);
+    constexpr Vec3(T x, T y, T z);
 
     T dot(const Vec3& rhs) const;
 
@@ -118,6 +118,10 @@ struct Vec3 {
     
     Vec3<T>& clamp(T min, T max);
 
+
+    T& operator[](int i);
+    T operator[](int i) const;
+
 };
 
 /**
@@ -180,9 +184,6 @@ static bool operator==(const Vec3<T>& lhs, const Vec3<T>& rhs) {
     return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
 }
 
-
-
-
 template<typename T>
 static Vec3<T> operator+(const Vec3<T>& lhs, T value) {
     return Vec3(lhs.x + value, lhs.y + value, lhs.z + value);
@@ -214,4 +215,12 @@ static Vec3<T> operator*(T value, const Vec3<T>& lhs) {
     return Vec3(lhs.x * value, lhs.y * value, lhs.z * value);
 }
 
+template<typename T>
+static Vec3<T> min(const Vec3<T>& lhs, const Vec3<T>& rhs) {
+    return Vec3(std::min(lhs.x, rhs.x), std::min(lhs.y, rhs.y), std::min(lhs.z, rhs.z));
+}
 
+template<typename T>
+static Vec3<T> max(const Vec3<T>& lhs, const Vec3<T>& rhs) {
+    return Vec3(std::max(lhs.x, rhs.x), std::max(lhs.y, rhs.y), std::max(lhs.z, rhs.z));
+}
