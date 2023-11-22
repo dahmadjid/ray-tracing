@@ -79,7 +79,7 @@ public:
         std::optional<HitPayload> payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
         for (u32 bounce = 0; bounce < max_bounces; bounce++) {
             if (!payload.has_value()) {
-                light += Vec3<f32>(0.6f, 0.7f, 0.9f) * contribution;
+                // light += Vec3<f32>(0.6f, 0.7f, 0.9f) * contribution;
                 break;
             }
             seed += bounce;
@@ -89,17 +89,11 @@ public:
             }
             Vec3<f32> view_vector = ray.direction;
             ray.origin = payload->hit_position;
-            ray.direction = (payload->normal+rand_vector).normalize();
+            ray.direction = rand_vector.normalize();
             Vec3<f32> light_vector = ray.direction;
             light += payload->material.get_emission() * contribution;
 
-            auto brdf = DisneyBRDF::BRDF(light_vector, view_vector, payload->normal, payload->material);
-
-            if (brdf.has_value()) {
-                contribution *= (*brdf) * std::abs(light_vector.dot(view_vector)); 
-            } else {
-                return Vec3<f32>(1.0f, 0, 0);
-            }
+            contribution *= DisneyBRDF::BRDF(light_vector, view_vector, payload->normal, payload->material) * payload->normal.dot(light_vector);
 
             payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
         }
@@ -112,27 +106,21 @@ public:
             std::optional<HitPayload> payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
             for (u32 bounce = 0; bounce < max_bounces; bounce++) {
                 if (!payload.has_value()) {
-                    light += Vec3<f32>(0.6f, 0.7f, 0.9f) * contribution;
+                    // light += Vec3<f32>(0.6f, 0.7f, 0.9f) * contribution;
                     break;
                 }
-                seed += bounce;
                 Vec3<f32> rand_vector = Vec3<f32>::random(seed);
                 if (payload->normal.dot(rand_vector) < 0) {
                     rand_vector = -rand_vector;
                 }
                 Vec3<f32> view_vector = ray.direction;
                 ray.origin = payload->hit_position;
-                ray.direction = (view_vector.reflect(payload->normal)+rand_vector.scale(payload->material.roughness)).normalize();
+                ray.direction = (view_vector.reflect(payload->normal) + rand_vector.scale(payload->material.roughness)).normalize();
                 Vec3<f32> light_vector = ray.direction;
                 light += payload->material.get_emission() * contribution;
 
-                auto brdf = DisneyBRDF::BRDF(light_vector, view_vector, payload->normal, payload->material);
+                contribution *= DisneyBRDF::BRDF(light_vector, view_vector, payload->normal, payload->material) * payload->normal.dot(light_vector);
 
-                if (brdf.has_value()) {
-                    contribution *= (*brdf) * std::abs(light_vector.dot(view_vector)); 
-                } else {
-                    return Vec3<f32>(1.0f, 0, 0);
-                }
 
                 payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
             }

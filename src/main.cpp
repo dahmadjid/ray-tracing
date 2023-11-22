@@ -37,6 +37,46 @@ int main() {
     //         .emission_power = 120.0f,
     //     })
     // );
+
+    scene.add_object(Sphere(
+        Vec3<f32>(-3.f,  0.f, 0.f),
+        1.0f,
+        Material{
+            .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
+            .roughness = 0.0f,
+            .metalic = 0.f,
+        })
+    );
+
+    scene.add_object(Sphere(
+        Vec3<f32>(-1.f,  0.f, 0.f),
+        1.0f,
+        Material{
+            .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
+            .roughness = 0.5f,
+            .metalic = 0.f,
+        })
+    );
+    scene.add_object(Sphere(
+        Vec3<f32>(1.f,  0.f, 0.f),
+        1.0f,
+        Material{
+            .albedo = u8_color_to_float(Vec3<u8>(255, 255, 255)),
+            .roughness = 0.0f,
+            .metalic = 1.f,
+        })
+    );
+
+    scene.add_object(Sphere(
+        Vec3<f32>(3.f,  0.f, 0.f),
+        1.0f,
+        Material{
+            .albedo = u8_color_to_float(Vec3<u8>(255, 255, 255)),
+            .roughness = 0.5f,
+            .metalic = 1.f,
+        })
+    );
+
     scene.add_object(Box(
         Vec3<f32>(0.0f, 3.0f, 0.0f),
         10, 0.10f, 10,
@@ -45,39 +85,9 @@ int main() {
             .albedo = Vec3<f32>(1.0f),
             .roughness = 1.0f,
             .metalic = 1.0f,
-            .emission_power = 50.0f,
+            .emission_power = 40.0f,
         }
     ));
-
-    scene.add_object(Sphere(
-        Vec3<f32>(-1.f,  0.f, 0.f),
-        1.0f,
-        Material{
-            .albedo = u8_color_to_float(Vec3<u8>(25, 200, 200)),
-            .roughness = 0.0f,
-            .metalic = 0.f,
-        })
-    );
-
-    scene.add_object(Sphere(
-        Vec3<f32>(1.f,  0.f, 0.f),
-        1.0f,
-        Material{
-            .albedo = u8_color_to_float(Vec3<u8>(50, 200, 30)),
-            .roughness = 0.0f,
-            .metalic = 1.f,
-        })
-    );
-
-    // scene.add_object(Sphere(
-    //     Vec3<f32>(-1.1f, 0.f, 0.0f),
-    //     1.0f,
-    //     Material{
-    //         .albedo = u8_color_to_float(Vec3<u8>(200, 0, 20)),
-    //         .roughness = 0.4f,
-    //         .metalic = 0.0f,
-    //     })
-    // );
 
     scene.add_object(Box(
         Vec3<f32>(0.0f, -6.0f, 0.0f),
@@ -96,7 +106,7 @@ int main() {
         0,0,0,
         Material{
             .albedo = u8_color_to_float(Vec3<u8>(255, 255, 255)),
-            .roughness = 0.1f,
+            .roughness = 0.0f,
             .metalic = 0.0f,
         }
     ));
@@ -110,8 +120,8 @@ int main() {
         0,0,0,
         Material{
             .albedo = u8_color_to_float(Vec3<u8>(255, 200, 200)),
-            .roughness = 0.1f,
-            .metalic = 0.0f,
+            .roughness = 0.f,
+            .metalic = 1.0f,
         }
     ));
     
@@ -121,8 +131,8 @@ int main() {
         0,0,0,
         Material{
             .albedo = u8_color_to_float(Vec3<u8>(255, 200, 200)),
-            .roughness = 0.1f,
-            .metalic = 0.0f,
+            .roughness = 0.0f,
+            .metalic = 1.0f,
         }
     ));
 
@@ -149,49 +159,34 @@ int main() {
     ));
 
 
-    // w.float_key_controls.push_back(FloatKeyControl{
-    //     .increment_glfw_key = GLFW_KEY_1,
-    //     .decrement_glfw_key = GLFW_KEY_2,
-    //     .variable_to_change = &scene.get_object<Sphere>(1).m_material.roughness,
-    //     .change_step = 0.1f,
-    // });
+    w.float_key_controls.push_back(FloatKeyControl{
+        .increment_glfw_key = GLFW_KEY_1,
+        .decrement_glfw_key = GLFW_KEY_2,
+        .variable_to_change = &scene.get_object<Sphere>(0).m_material.roughness,
+        .change_step = 0.1f,
+    });
 
-    // w.float_key_controls.push_back(FloatKeyControl{
-    //     .increment_glfw_key = GLFW_KEY_3,
-    //     .decrement_glfw_key = GLFW_KEY_4,
-    //     .variable_to_change = &scene.get_object<Sphere>(1).m_material.metalic,
-    //     .change_step = 0.1f,
-    // });
+    w.float_key_controls.push_back(FloatKeyControl{
+        .increment_glfw_key = GLFW_KEY_3,
+        .decrement_glfw_key = GLFW_KEY_4,
+        .variable_to_change = &scene.get_object<Sphere>(1).m_material.roughness,
+        .change_step = 0.1f,
+    });
 
+   
+    w.float_key_controls.push_back(FloatKeyControl{
+        .increment_glfw_key = GLFW_KEY_5,
+        .decrement_glfw_key = GLFW_KEY_6,
+        .variable_to_change = &scene.get_object<Sphere>(2).m_material.roughness,
+        .change_step = 0.1f,
+    });
 
-    // w.float_key_controls.push_back(FloatKeyControl{
-    //     .increment_glfw_key = GLFW_KEY_5,
-    //     .decrement_glfw_key = GLFW_KEY_6,
-    //     .variable_to_change = &scene.get_object<Box>(2).m_material.roughness,
-    //     .change_step = 0.1f,
-    // });
-
-    // w.float_key_controls.push_back(FloatKeyControl{
-    //     .increment_glfw_key = GLFW_KEY_7,
-    //     .decrement_glfw_key = GLFW_KEY_8,
-    //     .variable_to_change = &scene.get_object<Box>(2).m_material.metalic,
-    //     .change_step = 0.1f,
-    // });
-
-
-    // w.float_key_controls.push_back(FloatKeyControl{
-    //     .increment_glfw_key = GLFW_KEY_9,
-    //     .decrement_glfw_key = GLFW_KEY_0,
-    //     .variable_to_change = &scene.get_object<Sphere>(3).m_material.roughness,
-    //     .change_step = 0.1f,
-    // });
-
-    // w.float_key_controls.push_back(FloatKeyControl{
-    //     .increment_glfw_key = GLFW_KEY_O,
-    //     .decrement_glfw_key = GLFW_KEY_P,
-    //     .variable_to_change = &scene.get_object<Sphere>(3).m_material.metalic,
-    //     .change_step = 0.1f,
-    // });
+    w.float_key_controls.push_back(FloatKeyControl{
+        .increment_glfw_key = GLFW_KEY_7,
+        .decrement_glfw_key = GLFW_KEY_8,
+        .variable_to_change = &scene.get_object<Sphere>(3).m_material.roughness,
+        .change_step = 0.1f,
+    });
 
     while(!glfwWindowShouldClose(w.m_glfw_window)) {
         glfwPollEvents();

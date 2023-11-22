@@ -118,7 +118,7 @@ static f32 sign(f32 number) {
         return 1.0f;
     }
 }
-std::optional<Vec3<f32>> BRDF(const Vec3<f32>& L, const Vec3<f32>& V, const Vec3<f32>& N, RayTracer::Material material )
+Vec3<f32> BRDF(const Vec3<f32>& L, const Vec3<f32>& V, const Vec3<f32>& N, RayTracer::Material material )
 {
     material.roughness = std::max(material.roughness, 0.04f);
     f32 NdotL = N.dot(L);
@@ -126,8 +126,8 @@ std::optional<Vec3<f32>> BRDF(const Vec3<f32>& L, const Vec3<f32>& V, const Vec3
     if (NdotV <= 0) {
         NdotV = -NdotV;
     }
-    if (NdotL <= 0 || NdotV <= 0) {
-        return std::nullopt;
+    if (NdotL <= 0) {
+        NdotL = -NdotL;
     }
 
     Vec3<f32> H = (L+V).normalize();
@@ -159,8 +159,7 @@ std::optional<Vec3<f32>> BRDF(const Vec3<f32>& L, const Vec3<f32>& V, const Vec3
     // sheen
     Vec3<f32> Fsheen = FH * material.sheen * Csheen;
 
-    Vec3<f32> brdf =((1/PI) * Fd *Cdlin + Fsheen)
-        * (1-material.metalic) + Ds*Gs*Fs;
+    Vec3<f32> brdf =((1/PI) * Fd *Cdlin + Fsheen) * (1-material.metalic) + Ds*Gs*Fs;
 
     return brdf;
 }
