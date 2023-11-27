@@ -1,4 +1,4 @@
-#include "ray-tracing/DisneyBrdf.hpp"
+#include "ray-tracing/BRDF.hpp"
 #include "ray-tracing/objects.hpp"
 #include <fmt/core.h>
 #include <optional>
@@ -31,7 +31,7 @@ if (vec.x == 0 && vec.y == 0 && vec.z == 0)  {\
 
 
 
-namespace DisneyBRDF {
+namespace BRDF{
 static f32 sqr(f32 n) {
     return n*n;
 }

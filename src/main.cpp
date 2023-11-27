@@ -196,7 +196,7 @@ int main() {
             r.recreate_swap_chain();
             w.framebuffer_resized = false;
             r.wait_for_device_idle();
-            usleep(100000);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
 

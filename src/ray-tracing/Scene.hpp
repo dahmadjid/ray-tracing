@@ -3,7 +3,7 @@
 #include "linear_algebra/Vec3.decl.hpp"
 #include "linear_algebra/Vec4.hpp"
 #include "ray-tracing/Camera.hpp"
-#include "ray-tracing/DisneyBrdf.hpp"
+#include "ray-tracing/BRDF.hpp"
 #include "ray-tracing/objects.hpp"
 #include "ray-tracing/Ray.hpp"
 #include <cmath>
@@ -92,7 +92,7 @@ public:
                 Vec3<f32> light_vector = ray.direction;
                 light += payload->material.get_emission() * contribution;
 
-                contribution *= DisneyBRDF::BRDF(light_vector, view_vector, payload->normal, payload->material) * payload->normal.dot(light_vector);
+                contribution *= BRDF::BRDF(light_vector, view_vector, payload->normal, payload->material) * payload->normal.dot(light_vector);
 
                 payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
             }
@@ -116,7 +116,7 @@ public:
                 Vec3<f32> light_vector = ray.direction;
                 light += payload->material.get_emission() * contribution;
 
-                contribution *= DisneyBRDF::BRDF(light_vector, view_vector, payload->normal, payload->material) * payload->normal.dot(light_vector);
+                contribution *= BRDF::BRDF(light_vector, view_vector, payload->normal, payload->material) * payload->normal.dot(light_vector);
 
 
                 payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());

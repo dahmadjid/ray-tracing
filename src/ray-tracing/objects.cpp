@@ -4,7 +4,7 @@
 #include <cmath>
 #include <fmt/core.h>
 #include <optional>
-
+#include <utils/ScopedTimer.hpp>
 
 static f32 max_ignore_nan(f32 a, f32 b) {
     if (std::isnan(a)) {
@@ -97,7 +97,6 @@ namespace RayTracer {
     }
     
     std::optional<HitPayload> Box::hit(const Ray& ray, f32 t_min, f32 t_max) const {
-        
         float tNear, tFar;
         if (!rayBoxIntersect(ray, *this, tNear, tFar)) {
             return std::nullopt;

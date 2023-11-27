@@ -5,7 +5,7 @@
 
 // Credits: https://github.com/wdas/brdf/blob/main/src/brdfs/disney.brdf
 
-namespace DisneyBRDF {
+namespace BRDF {
 float SchlickFresnel(float u);
 
 float GTR1(float NdotH, float a);

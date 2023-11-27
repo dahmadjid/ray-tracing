@@ -56,7 +56,14 @@ set(UTILS_HEADERS
 add_executable(renderer 
     src/main.cpp
     src/ray-tracing/objects.cpp
-    src/ray-tracing/DisneyBrdf.cpp
+    src/ray-tracing/BRDF.cpp
+    src/ray-tracing/BRDF.hpp
+    src/ray-tracing/Scene.hpp
+    src/ray-tracing/objects.hpp
+    src/ray-tracing/Ray.hpp
+    src/ray-tracing/Camera.hpp
+
+
     src/utils/MathUtils.cpp
     src/utils/BMP.cpp
     
