@@ -61,7 +61,7 @@ int main() {
         Vec3<f32>(1.f,  0.f, 0.f),
         1.0f,
         Material{
-            .albedo = u8_color_to_float(Vec3<u8>(255, 255, 255)),
+            .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
             .roughness = 0.0f,
             .metalic = 1.f,
         })
@@ -71,7 +71,7 @@ int main() {
         Vec3<f32>(3.f,  0.f, 0.f),
         1.0f,
         Material{
-            .albedo = u8_color_to_float(Vec3<u8>(255, 255, 255)),
+            .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
             .roughness = 0.5f,
             .metalic = 1.f,
         })
@@ -85,7 +85,7 @@ int main() {
             .albedo = Vec3<f32>(1.0f),
             .roughness = 1.0f,
             .metalic = 1.0f,
-            .emission_power = 40.0f,
+            .emission_power = 30.0f,
         }
     ));
 

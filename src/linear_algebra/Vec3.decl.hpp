@@ -118,9 +118,11 @@ struct Vec3 {
     
     Vec3<T>& clamp(T min, T max);
 
+    template<typename IndexType>
+    T& operator[](IndexType i);
 
-    T& operator[](int i);
-    T operator[](int i) const;
+    template<typename IndexType>
+    T operator[](IndexType i) const;
 
 };
 

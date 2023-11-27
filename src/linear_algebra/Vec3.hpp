@@ -173,25 +173,26 @@ Vec3<T>& Vec3<T>::clamp(T min, T max) {
 }
 
 template<typename T>
-T& Vec3<T>::operator[](int i) {
-    switch(i) {
-        case 0:
-            return this->x;
-        case 1:
-            return this->y;
-        default:
-            return this->z;
+template<typename IndexType>
+T& Vec3<T>::operator[](IndexType i) {
+    if (i == 0) {
+        return this->x;
     }
+    if (i == 1) {
+        return this->y;
+    }
+    return this->z;
 }
 
 template<typename T>
-T Vec3<T>::operator[](int i) const {
-    switch(i) {
-        case 0:
-            return this->x;
-        case 1:
-            return this->y;
-        default:
-            return this->z;
+template<typename IndexType>
+T Vec3<T>::operator[](IndexType i) const {
+    if (i == 0) {
+        return this->x;
     }
+    if (i == 1) {
+        return this->y;
+    }
+    return this->z;
+
 }
