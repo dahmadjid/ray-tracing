@@ -57,6 +57,7 @@ int main() {
             .metalic = 0.f,
         })
     );
+
     scene.add_object(Sphere(
         Vec3<f32>(1.f,  0.f, 0.f),
         1.0f,
@@ -190,7 +191,7 @@ int main() {
 
     while(!glfwWindowShouldClose(w.m_glfw_window)) {
         glfwPollEvents();
-        scene.render(10);    
+        scene.render(3);    
 
         if (w.framebuffer_resized) {
             r.recreate_swap_chain();

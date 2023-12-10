@@ -127,8 +127,7 @@ private:
 };
 
 
-class Sphere {
-public:
+struct Sphere {
     std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const;
     Vec3<f32> position() const { return m_position; }
     void set_position(const Vec3<f32>& pos) { m_position = pos; }
@@ -143,8 +142,7 @@ public:
     Material m_material;
 };
 
-class Box {
-public:
+struct Box {
     std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const;
     Vec3<f32> position() const { return m_position; }
     void set_position(const Vec3<f32>& pos) { m_position = pos; }
@@ -177,11 +175,6 @@ public:
     f32 m_depth;
     Vec3<f32> m_halves;
 };
-
-
-
-
-
 
 struct PointLight {
     PointLight(const Vec3<f32>& position, const Vec3<f32>& color): 
