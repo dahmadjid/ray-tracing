@@ -45,12 +45,19 @@ set(LINEAR_ALGBERA_HEADERS
 )
 
 
-set(UTILS_HEADERS
+set(UTILS
     src/utils/BS_thread_pool.hpp
     src/utils/Panic.hpp
     src/utils/SameAsAny.hpp
     src/utils/ScopedTimer.hpp
     src/utils/Overloaded.hpp
+    src/utils/MathUtils.hpp
+    src/utils/MathUtils.cpp
+    src/utils/BMP.hpp
+    src/utils/BMP.cpp
+    src/utils/Obj.hpp
+    src/utils/Obj.cpp
+    
 )
     
 add_executable(renderer 
@@ -64,23 +71,20 @@ add_executable(renderer
     src/ray-tracing/Camera.hpp
 
 
-    src/utils/MathUtils.cpp
-    src/utils/BMP.cpp
-    
+
     src/renderer/renderer.cpp
     src/renderer/renderer.hpp
     src/renderer/vk_enum_string_helper.hpp
     src/window/window.hpp
     
     ${LINEAR_ALGBERA_HEADERS}
-    ${UTILS_HEADERS}
+    ${UTILS}
 )
 
 add_executable(tests
     src/linear_algebra/tests.cpp
-    src/utils/MathUtils.cpp
     ${LINEAR_ALGBERA_HEADERS}
-    ${UTILS_HEADERS}
+    ${UTILS}
 )
 
 

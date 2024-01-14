@@ -11,6 +11,7 @@
 #include "ray-tracing/Camera.hpp"
 #include "ray-tracing/Scene.hpp"
 #include "ray-tracing/objects.hpp"
+#include "utils/Obj.hpp"
 
 using namespace RayTracer;
 
@@ -210,6 +211,7 @@ int scene_1() {
     }
     
     r.wait_for_device_idle();
+    return 0;
 }
 
 
@@ -265,8 +267,13 @@ int scene_2() {
     }
 
     r.wait_for_device_idle();
+    return 0;
 }
 
 int main() {
-    return scene_2();
+
+    auto obj = load_obj("test.obj");
+
+    //return scene_2();
+    return 0;
 }
