@@ -22,7 +22,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "utils/Panic.hpp"
-
+#include <filesystem>
 namespace renderer
 {
 namespace chrono = std::chrono;
@@ -1154,6 +1154,7 @@ std::vector<char> Renderer::read_shader(std::string_view file_path) {
     stream.open(file_path.data(), std::ios_base::ate | std::ios_base::binary);
     if (!stream.good()) {
         fmt::println("Failure reading file {}", file_path);
+        fmt::println("current working directory == {}", std::filesystem::current_path().string());
         return {};
     }
     auto size = stream.tellg();

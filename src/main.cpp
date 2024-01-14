@@ -18,7 +18,10 @@ constexpr Vec3<f32> u8_color_to_float(Vec3<u8>&& color) {
     return Vec3<f32>(color.x / 255.0f, color.y / 255.0f, color.z / 255.0f);
 }
 
-int main() {
+
+
+
+int scene_1() {
 
     // CAMERA = Vec3(3.4589443, 2.62217, 12.626352) 0.20000002 -0.19999999
     // CAMERA = Vec3(0, 2.8092508, 14.059006) 0.20000002 0
@@ -207,4 +210,63 @@ int main() {
     }
     
     r.wait_for_device_idle();
+}
+
+
+
+int scene_2() {
+
+    Camera cam(45, Vec3<f32>(), 0, 0, 1280, 720);
+    Window w(cam);
+    auto r = renderer::Renderer(w);
+    Scene scene(cam);
+    scene.add_object(Triangle(
+        Vec3(0.0f),
+        Material{
+            .albedo = Vec3(0.0f, 0.0f, 1.0f),
+            .emission_power = 1,
+        }, 
+        Vec3(Vec3(0.0f, 1.0f, 0.0f), Vec3(1.0f, 0.0f, 0.0f), Vec3(-1.0f, 0.0f, 0.0f))
+    ));
+
+    scene.add_object(Triangle(
+        Vec3(0.0f),
+        Material{
+            .albedo = Vec3(0.0f, 0.0f, 1.0f),
+            .emission_power = 1,
+        },
+        Vec3(Vec3(0.0f, 1.0f, 1.0f), Vec3(1.0f, 0.0f, 0.0f), Vec3(-1.0f, 0.0f, 0.0f))
+        ));
+
+    scene.add_object(Triangle(
+        Vec3(0.0f),
+        Material{
+            .albedo = Vec3(0.0f, 0.0f, 1.0f),
+            .emission_power = 1,
+        },
+        Vec3(Vec3(0.0f, 1.0f, 2.0f), Vec3(1.0f, 0.0f, 0.0f), Vec3(-1.0f, 0.0f, 0.0f))
+    ));
+
+    while (!glfwWindowShouldClose(w.m_glfw_window)) {
+        glfwPollEvents();
+        scene.render(3);
+
+        if (w.framebuffer_resized) {
+            r.recreate_swap_chain();
+            w.framebuffer_resized = false;
+            r.wait_for_device_idle();
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
+
+
+        r.update_image(reinterpret_cast<u8*>(cam.image.data()));
+        r.draw_frame();
+    }
+
+    r.wait_for_device_idle();
+}
+
+int main() {
+    return scene_2();
 }

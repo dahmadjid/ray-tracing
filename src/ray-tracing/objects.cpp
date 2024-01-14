@@ -121,7 +121,31 @@ namespace RayTracer {
         // payload.normal.normalize();
         payload.t = tNear;
         payload.material = this->material();
-        
         return payload;
+    }
+
+    std::optional<HitPayload> Triangle::hit(const Ray& ray, f32 t_min, f32 t_max) const {
+        HitPayload payload;
+        f32 D = -m_normal.dot(m_vertices.x);
+        payload.t = -(m_normal.dot(ray.origin) + D) / m_normal.dot(ray.direction);
+        if (payload.t > t_max || payload.t < t_min) {
+            return std::nullopt;
+        }
+        payload.hit_position = ray.origin + ray.direction * payload.t;
+        payload.material = this->material();
+        payload.normal = m_normal;
+
+
+        Vec3<f32> C0 = payload.hit_position - m_vertices.x;
+        Vec3<f32> C1 = payload.hit_position - m_vertices.y;
+        Vec3<f32> C2 = payload.hit_position - m_vertices.z;
+        if (
+            m_normal.dot(m_edges.x.cross(C0)) > 0 &&
+            m_normal.dot(m_edges.y.cross(C1)) > 0 &&
+            m_normal.dot(m_edges.z.cross(C2)) > 0
+        ) {
+            return payload; // P is inside the triangle
+        } 
+        return std::nullopt;
     }
 };

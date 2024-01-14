@@ -142,6 +142,28 @@ struct Sphere {
     Material m_material;
 };
 
+struct Triangle {
+    std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const;
+    Vec3<f32> position() const { return m_position; }
+    void set_position(const Vec3<f32>& pos) { m_position = pos; }
+    Material material() const { return m_material; }
+    Triangle(
+        const Vec3<f32>& position,
+        const Material& material,
+        const Vec3<Vec3<f32>>& vertices
+    ) : m_position(position), m_material(material), m_vertices(vertices) {
+        m_edges.x = m_vertices.y - m_vertices.x;
+        m_edges.y = m_vertices.z - m_vertices.y;
+        m_edges.z = m_vertices.x - m_vertices.z;
+        m_normal =  m_edges.x.cross(m_edges.y).normalize();
+    }
+    Vec3<f32> m_position;
+    Material m_material;
+    Vec3<Vec3<f32>> m_vertices;
+    Vec3<Vec3<f32>> m_edges;
+    Vec3<f32> m_normal;
+};
+
 struct Box {
     std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const;
     Vec3<f32> position() const { return m_position; }
@@ -183,7 +205,7 @@ struct PointLight {
     Vec3<f32> color;
 };
 
-using ObjectsList = HittableList<Sphere, Box>;
+using ObjectsList = HittableList<Sphere, Box, Triangle>;
 using LightList = std::vector<std::variant<PointLight>>;
 
 
