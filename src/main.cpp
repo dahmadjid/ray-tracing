@@ -217,41 +217,41 @@ int scene_1() {
 
 
 int scene_2() {
-
-    Camera cam(45, Vec3<f32>(), 0, 0, 1280, 720);
+    Camera cam(45, Vec3(0.0f, 2.2026611f, 4.0398674f), 0.4, 0, 400, 300);
     Window w(cam);
     auto r = renderer::Renderer(w);
     Scene scene(cam);
-    scene.add_object(Triangle(
-        Vec3(0.0f),
-        Material{
-            .albedo = Vec3(0.0f, 0.0f, 1.0f),
-            .emission_power = 1,
-        }, 
-        Vec3(Vec3(0.0f, 1.0f, 0.0f), Vec3(1.0f, 0.0f, 0.0f), Vec3(-1.0f, 0.0f, 0.0f))
+    scene.add_object(Mesh(
+        Vec3<f32>(), 
+        Material{ .albedo = Vec3(.9f, .9f, .9f), .emission_power = 50.0f },
+        load_obj("light.obj")
     ));
 
-    scene.add_object(Triangle(
-        Vec3(0.0f),
-        Material{
-            .albedo = Vec3(0.0f, 0.0f, 1.0f),
-            .emission_power = 1,
+    scene.add_object(Mesh(
+        Vec3<f32>(),
+        Material{ 
+            .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
+            .roughness = 0.0f,
         },
-        Vec3(Vec3(0.0f, 1.0f, 1.0f), Vec3(1.0f, 0.0f, 0.0f), Vec3(-1.0f, 0.0f, 0.0f))
-        ));
-
-    scene.add_object(Triangle(
-        Vec3(0.0f),
-        Material{
-            .albedo = Vec3(0.0f, 0.0f, 1.0f),
-            .emission_power = 1,
-        },
-        Vec3(Vec3(0.0f, 1.0f, 2.0f), Vec3(1.0f, 0.0f, 0.0f), Vec3(-1.0f, 0.0f, 0.0f))
+        load_obj("test.obj")
     ));
 
+    scene.add_object(Mesh(
+        Vec3<f32>(),
+        Material{
+            .albedo = u8_color_to_float(Vec3<u8>(25, 200, 100)),
+            .roughness = 0.3f,
+            .metalic = 1.0f
+        },
+        load_obj("suzanne.obj")
+    ));
+
+    for (int i = 0; i < 100; i++) {
+        fmt::println("iteration {}", i);
+        scene.render(3);
+    }
     while (!glfwWindowShouldClose(w.m_glfw_window)) {
         glfwPollEvents();
-        scene.render(3);
 
         if (w.framebuffer_resized) {
             r.recreate_swap_chain();
@@ -272,8 +272,5 @@ int scene_2() {
 
 int main() {
 
-    auto obj = load_obj("test.obj");
-
-    //return scene_2();
-    return 0;
+    return scene_2();
 }

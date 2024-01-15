@@ -148,4 +148,18 @@ namespace RayTracer {
         } 
         return std::nullopt;
     }
+
+    std::optional<HitPayload> Mesh::hit(const Ray& ray, f32 t_min, f32 t_max) const {
+        std::optional<HitPayload> closest_payload = std::nullopt;
+        for (const auto& tri : m_triangles) {
+            auto payload = tri.hit(ray, t_min, t_max);
+            if (!closest_payload.has_value()) {
+                closest_payload = payload;
+            }
+            else if (payload.has_value() && payload.value().t < closest_payload -> t) {
+                closest_payload = payload;
+            }
+        }
+        return closest_payload;
+    }
 };

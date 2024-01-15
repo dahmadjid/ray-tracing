@@ -2,6 +2,7 @@
 #include <fstream>
 #include <filesystem>
 #include <cassert>
+#include "utils/Panic.hpp"
 
 // parses "2.00 -1.00 3.00" to Vec3<f32> 
 static Vec3<f32> vec3_from_string(const std::string& s) {
@@ -49,9 +50,8 @@ ParsedObj load_obj(std::string_view file_path) {
     std::ifstream stream;
     stream.open(file_path.data(), std::ios_base::ate | std::ios_base::in);
     if (!stream.good()) {
-        fmt::println("Failure reading file {}", file_path);
+        panic("Failure reading file {}", file_path);
         fmt::println("current working directory == {}", std::filesystem::current_path().string());
-        return {};
     }
     u32 size = stream.tellg();
     std::string text_data;

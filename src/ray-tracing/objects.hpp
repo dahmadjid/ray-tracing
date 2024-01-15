@@ -11,6 +11,7 @@
 #include <vector>
 #include <variant>
 #include "utils/Overloaded.hpp"
+#include "utils/Obj.hpp"
 
 
 namespace RayTracer {
@@ -137,6 +138,7 @@ struct Sphere {
         f32 radius, 
         const Material& material
     ) : m_position(position), m_radius(radius), m_material(material) {}
+    
     Vec3<f32> m_position;    
     f32 m_radius = 0;
     Material m_material;
@@ -152,16 +154,58 @@ struct Triangle {
         const Material& material,
         const Vec3<Vec3<f32>>& vertices
     ) : m_position(position), m_material(material), m_vertices(vertices) {
+
         m_edges.x = m_vertices.y - m_vertices.x;
         m_edges.y = m_vertices.z - m_vertices.y;
         m_edges.z = m_vertices.x - m_vertices.z;
         m_normal =  m_edges.x.cross(m_edges.y).normalize();
     }
+    
     Vec3<f32> m_position;
     Material m_material;
     Vec3<Vec3<f32>> m_vertices;
     Vec3<Vec3<f32>> m_edges;
     Vec3<f32> m_normal;
+};
+
+struct Mesh {
+    std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const;
+    Vec3<f32> position() const { return m_position; }
+    void set_position(const Vec3<f32>& pos) { m_position = pos; }
+    Material material() const { return m_material; }
+
+    Mesh(
+        const Vec3<f32>& position,
+        const Material& material,
+        const ParsedObj& obj
+    ) : m_position(position), m_material(material) {
+        
+        m_triangles.reserve(obj.faces.size());
+        for (const Vec3<Vec3<i32>>& face_indices: obj.faces) {
+            // -1 because .obj starts index at 1
+            Vec3<f32> v0 = obj.vertices[face_indices.x.x - 1];
+            Vec3<f32> v1 = obj.vertices[face_indices.y.x - 1];
+            Vec3<f32> v2 = obj.vertices[face_indices.z.x - 1];
+
+            Coordinate u0 = obj.uv_map[face_indices.x.y - 1];
+            Coordinate u1 = obj.uv_map[face_indices.y.y - 1];
+            Coordinate u2 = obj.uv_map[face_indices.z.y - 1];
+
+            Vec3<f32> n0 = obj.vertex_normals[face_indices.x.z - 1];
+            Vec3<f32> n1 = obj.vertex_normals[face_indices.y.z - 1];
+            Vec3<f32> n2 = obj.vertex_normals[face_indices.z.z - 1];
+            Vec3 <f32> average = (n0 + n1 + n2) / 3.0f;
+            Triangle tri = Triangle(Vec3(0.0f), m_material, Vec3(v0, v1, v2));
+            if (average.dot(tri.m_normal) < 0) {
+                tri.m_normal = -tri.m_normal;
+            }
+            m_triangles.emplace_back(std::move(tri));
+        }
+    }
+   
+    Vec3<f32> m_position;
+    Material m_material;
+    std::vector<Triangle> m_triangles;
 };
 
 struct Box {
@@ -178,12 +222,13 @@ struct Box {
         f32 roll,
         f32 yaw,
         const Material& material
-    ) : m_position(position), m_material(material), m_pitch(pitch), m_roll(roll), m_yaw(yaw), m_width(width), m_height(height), m_depth(depth), m_halves(width/2, height/2, depth/2) {
+    ) : m_position(position), m_material(material), m_pitch(pitch), 
+        m_roll(roll), m_yaw(yaw), m_width(width), m_height(height), 
+        m_depth(depth), m_halves(width/2, height/2, depth/2) {
+        
         this->m_box_max = m_position + m_halves;
         this->m_box_min = m_position - m_halves;
-        
     }
-
    
     Vec3<f32> m_position;    
     Material m_material;
@@ -205,7 +250,7 @@ struct PointLight {
     Vec3<f32> color;
 };
 
-using ObjectsList = HittableList<Sphere, Box, Triangle>;
+using ObjectsList = HittableList<Sphere, Box, Triangle, Mesh>;
 using LightList = std::vector<std::variant<PointLight>>;
 
 
