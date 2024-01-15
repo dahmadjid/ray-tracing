@@ -153,11 +153,9 @@ namespace RayTracer {
         std::optional<HitPayload> closest_payload = std::nullopt;
         for (const auto& tri : m_triangles) {
             auto payload = tri.hit(ray, t_min, t_max);
-            if (!closest_payload.has_value()) {
+            if (payload.has_value()) {
                 closest_payload = payload;
-            }
-            else if (payload.has_value() && payload.value().t < closest_payload -> t) {
-                closest_payload = payload;
+                t_min = payload->t;
             }
         }
         return closest_payload;
