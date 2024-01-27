@@ -12,6 +12,7 @@
 #include "ray-tracing/Scene.hpp"
 #include "ray-tracing/objects.hpp"
 #include "utils/Obj.hpp"
+#include "utils/ScopedTimer.hpp"
 
 using namespace RayTracer;
 
@@ -26,7 +27,9 @@ int scene_1() {
 
     // CAMERA = Vec3(3.4589443, 2.62217, 12.626352) 0.20000002 -0.19999999
     // CAMERA = Vec3(0, 2.8092508, 14.059006) 0.20000002 0
-    Camera cam(45, Vec3<f32>(3.4589443f, 2.62217f, 12.626352f), 0.2f, -0.2f, 1280, 720);
+    // Camera cam(45, Vec3(0.0f, 2.2026611f, 4.0398674f), 0.4f, 0.3f, 800, 600);
+    // Camera cam(45, Vec3<f32>(3.4589443f, 2.62217f, 12.626352f), 0.2f, -0.2f, 1280, 720);
+    Camera cam(45, Vec3(0.43357855f, 1.0379548f, 3.0748024f), 0.2, 0.4f, 800, 600);
     Window w(cam);
     auto r = renderer::Renderer(w);
     Scene scene(cam);
@@ -43,8 +46,8 @@ int scene_1() {
     // );
 
     scene.add_object(Sphere(
-        Vec3<f32>(-3.f,  0.f, 0.f),
-        1.0f,
+        Vec3<f32>(-.5f,  0.5f, 0.f),
+        0.2f,
         Material{
             .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
             .roughness = 0.0f,
@@ -53,8 +56,8 @@ int scene_1() {
     );
 
     scene.add_object(Sphere(
-        Vec3<f32>(-1.f,  0.f, 0.f),
-        1.0f,
+        Vec3<f32>(-0.0f,  .5f, 0.f),
+        0.2f,
         Material{
             .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
             .roughness = 0.5f,
@@ -63,8 +66,8 @@ int scene_1() {
     );
 
     scene.add_object(Sphere(
-        Vec3<f32>(1.f,  0.f, 0.f),
-        1.0f,
+        Vec3<f32>(.5f,  0.5f, 0.f),
+        0.2f,
         Material{
             .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
             .roughness = 0.0f,
@@ -72,96 +75,21 @@ int scene_1() {
         })
     );
 
-    scene.add_object(Sphere(
-        Vec3<f32>(3.f,  0.f, 0.f),
-        1.0f,
-        Material{
-            .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
-            .roughness = 0.5f,
-            .metalic = 1.f,
-        })
-    );
-
-    scene.add_object(Box(
-        Vec3<f32>(0.0f, 3.0f, 0.0f),
-        10, 0.10f, 10,
-        0,0,0,
-        Material{
-            .albedo = Vec3<f32>(1.0f),
-            .roughness = 1.0f,
-            .metalic = 1.0f,
-            .emission_power = 30.0f,
-        }
+    scene.add_object(Mesh(
+        Vec3<f32>(), 
+        Material{ .albedo = Vec3(.9f, .9f, .9f), .emission_power = 50.0f },
+        load_obj("light.obj")
     ));
 
-    scene.add_object(Box(
-        Vec3<f32>(0.0f, -6.0f, 0.0f),
-        10,10,10,
-        0,0,0,
-        Material{
-            .albedo = u8_color_to_float(Vec3<u8>(255, 255, 255)),
+    scene.add_object(Mesh(
+        Vec3<f32>(),
+        Material{ 
+            .albedo = u8_color_to_float(Vec3<u8>(200, 200, 200)),
             .roughness = 0.0f,
-            .metalic = 1.0f,
-        }
-    ));
-    
-    scene.add_object(Box(
-        Vec3<f32>(0.0f, 8.0f, 0.0f),
-        10,10,10,
-        0,0,0,
-        Material{
-            .albedo = u8_color_to_float(Vec3<u8>(255, 255, 255)),
-            .roughness = 0.0f,
-            .metalic = 0.0f,
-        }
+        },
+        load_obj("test.obj")
     ));
 
-
-
-
-    scene.add_object(Box(
-        Vec3<f32>(-10.0f, 0.0f, 0.0f),
-        10,10,10,
-        0,0,0,
-        Material{
-            .albedo = u8_color_to_float(Vec3<u8>(255, 200, 200)),
-            .roughness = 0.f,
-            .metalic = 1.0f,
-        }
-    ));
-    
-    scene.add_object(Box(
-        Vec3<f32>(10.0f, 0.0f, 0.0f),
-        10,10,10,
-        0,0,0,
-        Material{
-            .albedo = u8_color_to_float(Vec3<u8>(255, 200, 200)),
-            .roughness = 0.0f,
-            .metalic = 1.0f,
-        }
-    ));
-
-    scene.add_object(Box(
-        Vec3<f32>(0.0f, 0.0f, -10.0f),
-        10,10,10,
-        0,0,0,
-        Material{
-            .albedo = u8_color_to_float(Vec3<u8>(255, 255, 255)),
-            .roughness = 0.0f,
-            .metalic = 1.0f,
-        }
-    ));
-    
-    scene.add_object(Box(
-        Vec3<f32>(0.0f, 0.0f, 10.0f),
-        10,10,10,
-        0,0,0,
-        Material{
-            .albedo = u8_color_to_float(Vec3<u8>(255, 255, 255)),
-            .roughness = 0.0f,
-            .metalic = 1.0f,
-        }
-    ));
 
 
     w.float_key_controls.push_back(FloatKeyControl{
@@ -186,12 +114,6 @@ int scene_1() {
         .change_step = 0.1f,
     });
 
-    w.float_key_controls.push_back(FloatKeyControl{
-        .increment_glfw_key = GLFW_KEY_7,
-        .decrement_glfw_key = GLFW_KEY_8,
-        .variable_to_change = &scene.get_object<Sphere>(3).m_material.roughness,
-        .change_step = 0.1f,
-    });
 
     while(!glfwWindowShouldClose(w.m_glfw_window)) {
         glfwPollEvents();
@@ -245,11 +167,15 @@ int scene_2() {
         },
         load_obj("suzanne.obj")
     ));
-
-    for (int i = 0; i < 100; i++) {
-        fmt::println("iteration {}", i);
-        scene.render(3);
+    
+    {
+        ScopedTimer<std::chrono::microseconds> s("Render");
+        for (int i = 0; i < 10; i++) {
+            ScopedTimer<std::chrono::milliseconds> s(fmt::format("iteration {}", i));
+            scene.render(3);
+        }
     }
+    return 0;
     while (!glfwWindowShouldClose(w.m_glfw_window)) {
         glfwPollEvents();
 
@@ -272,5 +198,5 @@ int scene_2() {
 
 int main() {
 
-    return scene_2();
+    return scene_1();
 }

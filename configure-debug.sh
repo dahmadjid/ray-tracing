@@ -14,5 +14,3 @@ cmake -Bbuild-debug -S.\
     -DCMAKE_EXPORT_COMPILE_COMMANDS=On\
     -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake\
     -DCMAKE_BUILD_TYPE=Debug
-
-cp build-debug/compile_commands.json ..
