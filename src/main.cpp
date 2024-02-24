@@ -16,10 +16,9 @@
 
 using namespace RayTracer;
 
-constexpr Vec3<f32> u8_color_to_float(Vec3<u8>&& color) {
-    return Vec3<f32>(color.x / 255.0f, color.y / 255.0f, color.z / 255.0f);
+constexpr Vec3f u8_color_to_float(Vec3<u8>&& color) {
+    return Vec3f(color.x / 255.0f, color.y / 255.0f, color.z / 255.0f);
 }
-
 
 
 
@@ -28,65 +27,65 @@ int scene_1() {
     // CAMERA = Vec3(3.4589443, 2.62217, 12.626352) 0.20000002 -0.19999999
     // CAMERA = Vec3(0, 2.8092508, 14.059006) 0.20000002 0
     // Camera cam(45, Vec3(0.0f, 2.2026611f, 4.0398674f), 0.4f, 0.3f, 800, 600);
-    // Camera cam(45, Vec3<f32>(3.4589443f, 2.62217f, 12.626352f), 0.2f, -0.2f, 1280, 720);
+    // Camera cam(45, Vec3f(3.4589443f, 2.62217f, 12.626352f), 0.2f, -0.2f, 1280, 720);
     Camera cam(45, Vec3(0.43357855f, 1.0379548f, 3.0748024f), 0.2, 0.4f, 800, 600);
     Window w(cam);
     auto r = renderer::Renderer(w);
     Scene scene(cam);
 
     // scene.add_object(Sphere(
-    //     Vec3<f32>(10.f,  10.f, 10.f),
+    //     Vec3f(10.f,  10.f, 10.f),
     //     5.0f,
     //     Material{
-    //         .albedo = Vec3<f32>(1.0f),
+    //         .albedo = Vec3f(1.0f),
     //         .roughness = 0.3f,
-    //         .metalic = 0.0f,
+    //         .metallic = 0.0f,
     //         .emission_power = 120.0f,
     //     })
     // );
 
     scene.add_object(Sphere(
-        Vec3<f32>(-.5f,  0.5f, 0.f),
+        Vec3f(-.5f,  0.5f, 0.f),
         0.2f,
-        Material{
+        Material({
             .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
             .roughness = 0.0f,
-            .metalic = 0.f,
-        })
+            .metallic = 0.f,
+        }))
     );
 
     scene.add_object(Sphere(
-        Vec3<f32>(-0.0f,  .5f, 0.f),
+        Vec3f(-0.0f,  .5f, 0.f),
         0.2f,
-        Material{
+        Material({
             .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
             .roughness = 0.5f,
-            .metalic = 0.f,
-        })
+            .metallic = 0.f,
+        }))
     );
 
     scene.add_object(Sphere(
-        Vec3<f32>(.5f,  0.5f, 0.f),
+        Vec3f(.5f,  0.5f, 0.f),
         0.2f,
-        Material{
+        Material({
             .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
             .roughness = 0.0f,
-            .metalic = 1.f,
-        })
+            .metallic = 1.f,
+        }))
     );
 
     scene.add_object(Mesh(
-        Vec3<f32>(), 
-        Material{ .albedo = Vec3(.9f, .9f, .9f), .emission_power = 50.0f },
+        Vec3f(), 
+        Material({ .albedo = Vec3(.9f, .9f, .9f), .emission_power = 50.0f }),
         load_obj("light.obj")
     ));
 
     scene.add_object(Mesh(
-        Vec3<f32>(),
-        Material{ 
+        Vec3f(),
+        Material({ 
             .albedo = u8_color_to_float(Vec3<u8>(200, 200, 200)),
             .roughness = 0.0f,
-        },
+        }),
         load_obj("test.obj")
     ));
 
@@ -117,7 +116,7 @@ int scene_1() {
 
     while(!glfwWindowShouldClose(w.m_glfw_window)) {
         glfwPollEvents();
-        scene.render(3);    
+        scene.render(6);    
 
         if (w.framebuffer_resized) {
             r.recreate_swap_chain();
@@ -144,27 +143,27 @@ int scene_2() {
     auto r = renderer::Renderer(w);
     Scene scene(cam);
     scene.add_object(Mesh(
-        Vec3<f32>(), 
-        Material{ .albedo = Vec3(.9f, .9f, .9f), .emission_power = 50.0f },
+        Vec3f(), 
+        Material({ .albedo = Vec3(.9f, .9f, .9f), .emission_power = 50.0f }),
         load_obj("light.obj")
     ));
 
     scene.add_object(Mesh(
-        Vec3<f32>(),
-        Material{ 
+        Vec3f(),
+        Material({ 
             .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
             .roughness = 0.0f,
-        },
+        }),
         load_obj("test.obj")
     ));
 
     scene.add_object(Mesh(
-        Vec3<f32>(),
-        Material{
+        Vec3f(),
+        Material({
             .albedo = u8_color_to_float(Vec3<u8>(25, 200, 100)),
             .roughness = 0.3f,
-            .metalic = 1.0f
-        },
+            .metallic = 1.0f
+        }),
         load_obj("suzanne.obj")
     ));
     

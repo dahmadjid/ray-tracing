@@ -4,7 +4,6 @@
 #include <optional>
 #include <cmath>
 #include "utils/Panic.hpp"
-
 #define PI (f32)std::numbers::pi
 
 #define CHECK_NAN(number)\
@@ -50,7 +49,7 @@ static f32 mix(f32 x, f32 y, f32 a) {
     return x * ( 1 - a) + y * a;
 }
 
-static Vec3<f32> mix(const Vec3<f32>& x, const Vec3<f32>& y, f32 a) {
+static Vec3f mix(const Vec3f& x, const Vec3f& y, f32 a) {
     return x * (1 - a) + y * a;
 }
 
@@ -106,9 +105,9 @@ f32 smithG_GGX_aniso(f32 NdotV, f32 VdotX, f32 VdotY, f32 ax, f32 ay)
     return 1 / (NdotV + std::sqrt( sqr(VdotX*ax) + sqr(VdotY*ay) + sqr(NdotV) ));
 }
 
-Vec3<f32> mon2lin(const Vec3<f32>& vec)
+Vec3f mon2lin(const Vec3f& vec)
 {
-    return Vec3<f32>(std::pow(vec.x, 2.2f), std::pow(vec.y, 2.2f), std::pow(vec.z, 2.2f));
+    return Vec3f(std::pow(vec.x, 2.2f), std::pow(vec.y, 2.2f), std::pow(vec.z, 2.2f));
 }
 
 static f32 sign(f32 number) {
@@ -118,9 +117,9 @@ static f32 sign(f32 number) {
         return 1.0f;
     }
 }
-Vec3<f32> BRDF(const Vec3<f32>& L, const Vec3<f32>& V, const Vec3<f32>& N, RayTracer::Material material )
+Vec3f BRDF(const Vec3f& L, const Vec3f& V, const Vec3f& N, const Vec3f& H, const RayTracer::Material material )
 {
-    material.roughness = std::max(material.roughness, 0.04f);
+    f32 roughness = std::max(material.roughness, 0.00f);
     f32 NdotL = N.dot(L);
     f32 NdotV = N.dot(V);
     if (NdotV <= 0) {
@@ -130,36 +129,34 @@ Vec3<f32> BRDF(const Vec3<f32>& L, const Vec3<f32>& V, const Vec3<f32>& N, RayTr
         NdotL = -NdotL;
     }
 
-    Vec3<f32> H = (L+V).normalize();
-    
     f32 NdotH = N.dot(H);
     f32 LdotH = L.dot(H);
 
-    Vec3<f32> Cdlin = mon2lin(material.albedo);
+    Vec3f Cdlin = mon2lin(material.albedo);
     f32 Cdlum = 0.3f*Cdlin.x + 0.6f*Cdlin.y + 0.1f*Cdlin.z; // luminance approx.
 
-    Vec3<f32> Ctint = Cdlum > 0 ? Cdlin/Cdlum : Vec3<f32>(1); // normalize lum. to isolate hue+sat
-    Vec3<f32> Cspec0 = mix(material.specular * 0.08f * mix(Vec3<f32>(1), Ctint, material.specular_tint), Cdlin, material.metalic);
-    Vec3<f32> Csheen = mix(Vec3<f32>(1), Ctint, material.sheen_tint);
+    Vec3f Ctint = Cdlum > 0 ? Cdlin/Cdlum : Vec3f(1); // normalize lum. to isolate hue+sat
+    Vec3f Cspec0 = mix(material.specular * 0.08f * mix(Vec3f(1), Ctint, material.specular_tint), Cdlin, material.metallic);
+    Vec3f Csheen = mix(Vec3f(1), Ctint, material.sheen_tint);
 
     // Diffuse fresnel - go from 1 at normal incidence to .5 at grazing
     // and mix in diffuse retro-reflection based on roughness
     f32 FL = SchlickFresnel(NdotL), FV = SchlickFresnel(NdotV);
-    f32 Fd90 = 0.5f + 2.0f * LdotH*LdotH * material.roughness;
+    f32 Fd90 = 0.5f + 2.0f * LdotH*LdotH * roughness;
     f32 Fd = mix(1.0f, Fd90, FL) * mix(1.0f, Fd90, FV);
 
     // specular
-    f32 Ds = GTR1(NdotH, material.roughness);
+    f32 Ds = GTR1(NdotH, roughness);
     f32 FH = SchlickFresnel(LdotH);
-    Vec3<f32> Fs = mix(Cspec0, Vec3<f32>(1), FH);
+    Vec3f Fs = mix(Cspec0, Vec3f(1), FH);
     f32 Gs;
-    Gs  = smithG_GGX(NdotL, material.roughness);
-    Gs *= smithG_GGX(NdotV, material.roughness);
+    Gs  = smithG_GGX(NdotL, roughness);
+    Gs *= smithG_GGX(NdotV, roughness);
 
     // sheen
-    Vec3<f32> Fsheen = FH * material.sheen * Csheen;
+    Vec3f Fsheen = FH * material.sheen * Csheen;
 
-    Vec3<f32> brdf =((1/PI) * Fd *Cdlin + Fsheen) * (1-material.metalic) + Ds*Gs*Fs;
+    Vec3f brdf = Vec3f(Gs);
 
     return brdf;
 }

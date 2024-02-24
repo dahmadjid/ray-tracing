@@ -12,56 +12,21 @@
 #include <variant>
 #include "utils/Overloaded.hpp"
 #include "utils/Obj.hpp"
-
+#include "Material.hpp"
 
 namespace RayTracer {
 
-// ::begin parameters
-// color baseColor .82 .67 .16
-// float metallic 0 1 0
-// float subsurface 0 1 0
-// float specular 0 1 .5
-// float roughness 0 1 .5
-// float specularTint 0 1 0
-// float anisotropic 0 1 0
-// float sheen 0 1 0
-// float sheenTint 0 1 .5
-// float clearcoat 0 1 0
-// float clearcoatGloss 0 1 1
-// ::end parameters
-
-struct Material {
-    Vec3<f32> albedo;
-    f32 roughness = 0.5f;
-    f32 metalic = 0.0f;
-    f32 emission_power = 0.0f;
-    f32 ior = 1.5f;
-    f32 subsurface = 0.0f;
-    f32 specular = 0.5f;
-    f32 specular_tint = 0.0f;
-    f32 anisotropic = 0.0f;
-    f32 sheen = 0.0f;
-    f32 sheen_tint = 0.5f;
-    f32 clearcoat = 0.0f;
-    f32 clearcoat_gloss = 1.0f;
-
-    Vec3<f32> get_emission() {
-        return Vec3(this->albedo).scale(emission_power);
-    };
-
-};
-
 struct HitPayload {
-    Vec3<f32> hit_position;
-    Vec3<f32> normal;
+    Vec3f hit_position;
+    Vec3f normal;
     f32 t = 0;
     bool front_face = false;
     Material material;
 };
 
 template<typename T>
-concept Hittable = requires (T& object, const Vec3<f32>& position, const Ray& ray, f32 t_min, f32 t_max){
-    { object.position() } -> std::same_as<Vec3<f32>>;
+concept Hittable = requires (T& object, const Vec3f& position, const Ray& ray, f32 t_min, f32 t_max){
+    { object.position() } -> std::same_as<Vec3f>;
     { object.set_position(position) } -> std::same_as<void>;
     { object.hit(ray, t_min, t_max) } -> std::same_as<std::optional<HitPayload>>;
     { object.material() } -> std::same_as<Material>;
@@ -130,29 +95,29 @@ private:
 
 struct Sphere {
     std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const;
-    Vec3<f32> position() const { return m_position; }
-    void set_position(const Vec3<f32>& pos) { m_position = pos; }
+    Vec3f position() const { return m_position; }
+    void set_position(const Vec3f& pos) { m_position = pos; }
     Material material() const { return m_material; }
     Sphere(
-        const Vec3<f32>& position, 
+        const Vec3f& position, 
         f32 radius, 
         const Material& material
     ) : m_position(position), m_radius(radius), m_material(material) {}
     
-    Vec3<f32> m_position;    
+    Vec3f m_position;    
     f32 m_radius = 0;
     Material m_material;
 };
 
 struct Triangle {
     std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const;
-    Vec3<f32> position() const { return m_position; }
-    void set_position(const Vec3<f32>& pos) { m_position = pos; }
+    Vec3f position() const { return m_position; }
+    void set_position(const Vec3f& pos) { m_position = pos; }
     Material material() const { return m_material; }
     Triangle(
-        const Vec3<f32>& position,
+        const Vec3f& position,
         const Material& material,
-        const Vec3<Vec3<f32>>& vertices
+        const Vec3<Vec3f>& vertices
     ) : m_position(position), m_material(material), m_vertices(vertices) {
 
         m_edges.x = m_vertices.y - m_vertices.x;
@@ -161,21 +126,21 @@ struct Triangle {
         m_normal =  m_edges.x.cross(m_edges.y).normalize();
     }
     
-    Vec3<f32> m_position;
+    Vec3f m_position;
     Material m_material;
-    Vec3<Vec3<f32>> m_vertices;
-    Vec3<Vec3<f32>> m_edges;
-    Vec3<f32> m_normal;
+    Vec3<Vec3f> m_vertices;
+    Vec3<Vec3f> m_edges;
+    Vec3f m_normal;
 };
 
 struct Mesh {
     std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const;
-    Vec3<f32> position() const { return m_position; }
-    void set_position(const Vec3<f32>& pos) { m_position = pos; }
+    Vec3f position() const { return m_position; }
+    void set_position(const Vec3f& pos) { m_position = pos; }
     Material material() const { return m_material; }
 
     Mesh(
-        const Vec3<f32>& position,
+        const Vec3f& position,
         const Material& material,
         const ParsedObj& obj
     ) : m_position(position), m_material(material) {
@@ -183,17 +148,17 @@ struct Mesh {
         m_triangles.reserve(obj.faces.size());
         for (const Vec3<Vec3<i32>>& face_indices: obj.faces) {
             // -1 because .obj starts index at 1
-            Vec3<f32> v0 = obj.vertices[face_indices.x.x - 1];
-            Vec3<f32> v1 = obj.vertices[face_indices.y.x - 1];
-            Vec3<f32> v2 = obj.vertices[face_indices.z.x - 1];
+            Vec3f v0 = obj.vertices[face_indices.x.x - 1];
+            Vec3f v1 = obj.vertices[face_indices.y.x - 1];
+            Vec3f v2 = obj.vertices[face_indices.z.x - 1];
 
             Coordinate u0 = obj.uv_map[face_indices.x.y - 1];
             Coordinate u1 = obj.uv_map[face_indices.y.y - 1];
             Coordinate u2 = obj.uv_map[face_indices.z.y - 1];
 
-            Vec3<f32> n0 = obj.vertex_normals[face_indices.x.z - 1];
-            Vec3<f32> n1 = obj.vertex_normals[face_indices.y.z - 1];
-            Vec3<f32> n2 = obj.vertex_normals[face_indices.z.z - 1];
+            Vec3f n0 = obj.vertex_normals[face_indices.x.z - 1];
+            Vec3f n1 = obj.vertex_normals[face_indices.y.z - 1];
+            Vec3f n2 = obj.vertex_normals[face_indices.z.z - 1];
             Vec3 <f32> average = (n0 + n1 + n2) / 3.0f;
             Triangle tri = Triangle(Vec3(0.0f), m_material, Vec3(v0, v1, v2));
             if (average.dot(tri.m_normal) < 0) {
@@ -203,18 +168,18 @@ struct Mesh {
         }
     }
    
-    Vec3<f32> m_position;
+    Vec3f m_position;
     Material m_material;
     std::vector<Triangle> m_triangles;
 };
 
 struct Box {
     std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const;
-    Vec3<f32> position() const { return m_position; }
-    void set_position(const Vec3<f32>& pos) { m_position = pos; }
+    Vec3f position() const { return m_position; }
+    void set_position(const Vec3f& pos) { m_position = pos; }
     Material material() const { return m_material; }
     Box(
-        const Vec3<f32>& position, 
+        const Vec3f& position, 
         f32 width, 
         f32 height, 
         f32 depth, 
@@ -230,24 +195,24 @@ struct Box {
         this->m_box_min = m_position - m_halves;
     }
    
-    Vec3<f32> m_position;    
+    Vec3f m_position;    
     Material m_material;
-    Vec3<f32> m_box_max;
-    Vec3<f32> m_box_min; 
+    Vec3f m_box_max;
+    Vec3f m_box_min; 
     f32 m_pitch = 0.0f;
     f32 m_roll = 0.0f;
     f32 m_yaw = 0.0f;
     f32 m_width;
     f32 m_height;
     f32 m_depth;
-    Vec3<f32> m_halves;
+    Vec3f m_halves;
 };
 
 struct PointLight {
-    PointLight(const Vec3<f32>& position, const Vec3<f32>& color): 
+    PointLight(const Vec3f& position, const Vec3f& color): 
         position(position), color(color) {}
-    Vec3<f32> position;    
-    Vec3<f32> color;
+    Vec3f position;    
+    Vec3f color;
 };
 
 using ObjectsList = HittableList<Sphere, Box, Triangle, Mesh>;

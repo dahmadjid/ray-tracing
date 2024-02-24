@@ -49,10 +49,7 @@ namespace RayTracer {
             return std::nullopt;
         }
 
-        // Vec3<f32> hit_point = origin + Vec3(ray.direction).scale(root);
-        // Vec3<f32> normal = (hit_point - this->position()).scale(1.0f / this->m_radius);
-
-        HitPayload payload;
+        HitPayload payload{ .material = this->material() };
 
         payload.hit_position = ray.origin + Vec3(ray.direction).scale(root);
         payload.normal = (payload.hit_position - this->position()).scale(1.0f / this->m_radius);
@@ -105,7 +102,7 @@ namespace RayTracer {
             return std::nullopt;
         }
         
-        HitPayload payload;
+        HitPayload payload{.material= this->material()};
         payload.hit_position = ray.origin + tNear * ray.direction;
 
         for (int i = 0; i < 3; ++i) {
@@ -120,12 +117,11 @@ namespace RayTracer {
         }
         // payload.normal.normalize();
         payload.t = tNear;
-        payload.material = this->material();
         return payload;
     }
 
     std::optional<HitPayload> Triangle::hit(const Ray& ray, f32 t_min, f32 t_max) const {
-        HitPayload payload;
+        HitPayload payload{ .material = this->material() };
         f32 D = -m_normal.dot(m_vertices.x);
         payload.t = -(m_normal.dot(ray.origin) + D) / m_normal.dot(ray.direction);
         if (payload.t > t_max || payload.t < t_min) {

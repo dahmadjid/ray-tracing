@@ -196,3 +196,6 @@ T Vec3<T>::operator[](IndexType i) const {
     return this->z;
 
 }
+
+
+using Vec3f = Vec3<f32>;

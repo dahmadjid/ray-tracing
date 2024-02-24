@@ -69,8 +69,8 @@ add_executable(renderer
     src/ray-tracing/objects.hpp
     src/ray-tracing/Ray.hpp
     src/ray-tracing/Camera.hpp
-
-
+    src/ray-tracing/Material.cpp
+    src/ray-tracing/Material.hpp
 
     src/renderer/renderer.cpp
     src/renderer/renderer.hpp
