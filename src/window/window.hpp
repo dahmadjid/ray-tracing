@@ -3,17 +3,14 @@
 #include "utils/BMP.hpp"
 #include <cstdint>
 #include <fmt/core.h>
+#include <functional>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include "utils/MathUtils.hpp"
 
-
-struct FloatKeyControl {
-    int increment_glfw_key;
-    int decrement_glfw_key;
-    float* variable_to_change;
-    float change_step;
-    float min = 0.0f;
-    float max = 1.0f;
+struct CustomKeyCallback {
+    int key;
+    std::function<void(void)> cb;
 };
 
 class Window {
@@ -21,7 +18,7 @@ public:
     GLFWwindow* m_glfw_window;
     RayTracer::Camera& cam; 
     bool framebuffer_resized = false;
-    std::vector<FloatKeyControl> float_key_controls;
+    std::vector<CustomKeyCallback> custom_key_cbs;
 
 
     Window(RayTracer::Camera& cam): cam(cam) {
@@ -101,25 +98,12 @@ public:
                 break;
 
             default:
-                for (const auto& key_control: this_window->float_key_controls) {
-                    if (key_control.increment_glfw_key == key) {
-                        if ((*key_control.variable_to_change) < key_control.max) {
-                            auto res = (*key_control.variable_to_change) + key_control.change_step;
-                            (*key_control.variable_to_change) = std::min(res, key_control.max);
-                            this_window->cam.reset_accu_data();
-                            fmt::println("{}", (*key_control.variable_to_change));
-                            break;
-                        } 
-                    } else if (key_control.decrement_glfw_key == key) {
-                        if ((*key_control.variable_to_change) > key_control.min) {
-                            auto res = (*key_control.variable_to_change) - key_control.change_step;
-                            (*key_control.variable_to_change) = std::max(res, key_control.min);
-                            this_window->cam.reset_accu_data();
-                            fmt::println("{}", (*key_control.variable_to_change));
-                            break;
-                        } 
+                for (const auto& cb: this_window->custom_key_cbs) {
+                    if (cb.key == key && action == 0 && cb.cb != nullptr) {
+                        cb.cb();
                     }
                 }
+                break;
         }
 
         if (pitch != 0 || yaw != 0) {

@@ -1,4 +1,5 @@
 #include "renderer.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <fmt/core.h>
 #include <fstream>
@@ -8,11 +9,7 @@
 #include <set>
 #include <fmt/format.h>
 #include <GLFW/glfw3.h>
-#ifdef WIN32
-#define string_VkResult(x) ""
-#else
-#include <vulkan/vk_enum_string_helper.h>
-#endif
+#define string_VkResult(x) (int)x
 #include <algorithm>
 #include <cstring>
 #include <iostream>
@@ -1454,7 +1451,7 @@ Renderer::~Renderer() {
     vkDestroyPipelineLayout(m_device, m_pipeline_layout, nullptr);
     vkDestroyRenderPass(m_device, m_render_pass, nullptr);
 
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(m_device, m_image_available_semaphores[i], nullptr);
         vkDestroySemaphore(m_device, m_render_finished_semaphores[i], nullptr);
         vkDestroyFence(m_device, m_in_flight_fences[i], nullptr);
@@ -1462,26 +1459,23 @@ Renderer::~Renderer() {
 
     vkDestroyCommandPool(m_device, m_command_pool, nullptr);
 
-
     vkDestroyBuffer(m_device, m_vertex_buffer, nullptr);
     vkFreeMemory(m_device, m_vertex_buffer_memory, nullptr);
 
     vkDestroyBuffer(m_device, m_index_buffer, nullptr);
     vkFreeMemory(m_device, m_index_buffer_memory, nullptr);
     
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroyBuffer(m_device, m_uniform_buffers[i], nullptr);
         vkFreeMemory(m_device, m_uniform_buffers_memory[i], nullptr);
     }
 
-    
-
-    vkDestroyDevice(m_device, nullptr);
-    
     vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
     if (enable_validation) {
         DestroyDebugUtilsMessengerEXT(m_instance, debugMessenger, nullptr);
     }
+    vkDestroyDescriptorSetLayout(m_device, m_descriptor_set_layout, nullptr);
+    vkDestroyDevice(m_device, nullptr);
     vkDestroyInstance(m_instance, nullptr);
 }
 }

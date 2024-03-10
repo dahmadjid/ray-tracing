@@ -2,8 +2,13 @@
 #include <cstdio>
 #include <fmt/core.h>
 #include <memory>
+#include <random>
+#include <thread>
 #include "linear_algebra/Vec3.decl.hpp"
+#include "linear_algebra/Vec3.hpp"
+#include "ray-tracing/Material.hpp"
 #include "ray-tracing/Ray.hpp"
+#include "utils/MathUtils.hpp"
 #include "utils/ScopedTimer.hpp"
 #include "window/window.hpp"
 #include "renderer/renderer.hpp"
@@ -28,7 +33,8 @@ int scene_1() {
     // CAMERA = Vec3(0, 2.8092508, 14.059006) 0.20000002 0
     // Camera cam(45, Vec3(0.0f, 2.2026611f, 4.0398674f), 0.4f, 0.3f, 800, 600);
     // Camera cam(45, Vec3f(3.4589443f, 2.62217f, 12.626352f), 0.2f, -0.2f, 1280, 720);
-    Camera cam(45, Vec3(0.43357855f, 1.0379548f, 3.0748024f), 0.2, 0.4f, 800, 600);
+     
+    Camera cam(45, Vec3f(0.046539098f, 1.4768682f, 6.134056f), 0.1f, 0, 800, 600);
     Window w(cam);
     auto r = renderer::Renderer(w);
     Scene scene(cam);
@@ -46,7 +52,7 @@ int scene_1() {
 
     scene.add_object(Sphere(
         Vec3f(-.5f,  0.5f, 0.f),
-        0.2f,
+        0.4f,
         Material({
             .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
             .roughness = 0.0f,
@@ -54,25 +60,26 @@ int scene_1() {
         }))
     );
 
-    scene.add_object(Sphere(
-        Vec3f(-0.0f,  .5f, 0.f),
-        0.2f,
-        Material({
-            .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
-            .roughness = 0.5f,
-            .metallic = 0.f,
-        }))
-    );
+    // scene.add_object(Sphere(
+    //     Vec3f(-0.0f,  .5f, 0.f),
+    //     0.2f,
+    //     Material({
+    //         .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
+    //         .roughness = 0.5f,
+    //         .metallic = 0.f,
+    //     }))
+    // );
 
     scene.add_object(Sphere(
         Vec3f(.5f,  0.5f, 0.f),
-        0.2f,
+        0.4f,
         Material({
             .albedo = u8_color_to_float(Vec3<u8>(200, 100, 25)),
-            .roughness = 0.0f,
+            .roughness = 0.1f,
             .metallic = 1.f,
         }))
     );
+    
 
     scene.add_object(Mesh(
         Vec3f(), 
@@ -80,43 +87,72 @@ int scene_1() {
         load_obj("light.obj")
     ));
 
-    scene.add_object(Mesh(
-        Vec3f(),
-        Material({ 
-            .albedo = u8_color_to_float(Vec3<u8>(200, 200, 200)),
-            .roughness = 0.0f,
-        }),
-        load_obj("test.obj")
+    scene.add_object(Box(
+        Vec3f(-2, 1, 0),
+        2, 2, 2, 0, 0, 0,
+        Material({.albedo = Vec3f(1, 0, 0)})
+    ));
+
+    scene.add_object(Box(
+        Vec3f(2, 1, 0),
+        2, 2, 2, 0, 0, 0,
+        Material({.albedo = Vec3f(0, 1, 0)})
+    ));
+
+    scene.add_object(Box(
+        Vec3f(0, 1, -2),
+        2, 2, 2, 0, 0, 0,
+        Material({.albedo = Vec3f(1, 1, 1)})
     ));
 
 
+    scene.add_object(Box(
+        Vec3f(0, -1, 0),
+        2, 2, 2, 0, 0, 0,
+        Material({.albedo = Vec3f(1, 1, 1)})
+    ));
 
-    w.float_key_controls.push_back(FloatKeyControl{
-        .increment_glfw_key = GLFW_KEY_1,
-        .decrement_glfw_key = GLFW_KEY_2,
-        .variable_to_change = &scene.get_object<Sphere>(0).m_material.roughness,
-        .change_step = 0.1f,
+    u32 selected_index = 0;
+    w.custom_key_cbs.push_back(CustomKeyCallback{
+        .key = GLFW_KEY_1,
+        .cb = [&selected_index]{
+            fmt::println("0");
+            selected_index = 0;
+        }
     });
 
-    w.float_key_controls.push_back(FloatKeyControl{
-        .increment_glfw_key = GLFW_KEY_3,
-        .decrement_glfw_key = GLFW_KEY_4,
-        .variable_to_change = &scene.get_object<Sphere>(1).m_material.roughness,
-        .change_step = 0.1f,
+
+    w.custom_key_cbs.push_back(CustomKeyCallback{
+        .key = GLFW_KEY_2,
+        .cb = [&selected_index]{
+            fmt::println("1");
+            selected_index = 1;
+        }
     });
 
-   
-    w.float_key_controls.push_back(FloatKeyControl{
-        .increment_glfw_key = GLFW_KEY_5,
-        .decrement_glfw_key = GLFW_KEY_6,
-        .variable_to_change = &scene.get_object<Sphere>(2).m_material.roughness,
-        .change_step = 0.1f,
+
+    w.custom_key_cbs.push_back(CustomKeyCallback{
+        .key = GLFW_KEY_3,
+        .cb = [&selected_index, &scene, &cam]{
+            Material& mat = scene.get_object<Sphere>(selected_index).m_material;
+            mat.update_roughness(mat.roughness + 0.05f);
+            cam.reset_accu_data();
+        }
+    });
+
+    w.custom_key_cbs.push_back(CustomKeyCallback{
+        .key = GLFW_KEY_4,
+        .cb = [&selected_index, &scene, &cam]{
+            Material& mat = scene.get_object<Sphere>(selected_index).m_material;
+            mat.update_roughness(mat.roughness - 0.05f);
+            cam.reset_accu_data();
+        }
     });
 
 
     while(!glfwWindowShouldClose(w.m_glfw_window)) {
         glfwPollEvents();
-        scene.render(6);    
+        scene.render(3);    
 
         if (w.framebuffer_resized) {
             r.recreate_swap_chain();
@@ -196,6 +232,5 @@ int scene_2() {
 }
 
 int main() {
-
     return scene_1();
 }

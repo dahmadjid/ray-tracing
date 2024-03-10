@@ -1,6 +1,7 @@
 #pragma once
 
 #include "linear_algebra/Vec3.decl.hpp"
+#include "linear_algebra/Vec3.hpp"
 #include "linear_algebra/Vec4.hpp"
 #include "ray-tracing/Camera.hpp"
 #include "ray-tracing/BRDF.hpp"
@@ -12,6 +13,7 @@
 #include <functional>
 #include <limits>
 #include <map>
+#include <math.h>
 #include <memory>
 #include <optional>
 #include <system_error>
@@ -26,6 +28,7 @@
 #include "utils/BS_thread_pool.hpp"
 #include "utils/Overloaded.hpp"
 #include "utils/Panic.hpp"
+#include "utils/types.hpp"
 
 
 #define CHECK_NAN(number)\
@@ -73,27 +76,42 @@ public:
         Vec3f light{ 0.0f };
         Ray ray = Ray{.origin=m_camera.position(), .direction=m_camera.get_ray(x, y)};
         Vec3f contribution = Vec3f(1.0f);
-        std::optional<HitPayload> payload = this->m_objects.closest_hit(ray, 0.01f, std::numeric_limits<f32>::max());
-        for (u32 bounce = 0; bounce < max_bounces; bounce++) {
+        for (u32 bounce = 0; bounce < max_bounces; ++bounce) {
+            std::optional<HitPayload> payload = this->m_objects.closest_hit(ray, 0.01f, std::numeric_limits<f32>::max());
             if (!payload.has_value()) {
-                 //light += Vec3f(0.6f, 0.7f, 0.9f) * contribution;
+                //  light += Vec3f(0.6f, 0.7f, 0.9f) * contribution;
                 break;
             }
-            Vec3f view_vector = ray.direction;
-            /*auto [half_vector, inv_pdf] = payload->material.sample(seed, ray.direction);
-            //Vec3f light_vector = view_vector.reflect(half_vector);
-            */
-            Vec3f rand_vector = Vec3f::random(seed).normalize();
-            Vec3f light_vector = (rand_vector.scale(1- payload->material.metallic) + view_vector.reflect(payload->normal) + rand_vector.scale(payload->material.roughness)).normalize();
+            Vec3f view_vector = -ray.direction;
+            
+            // auto [half_vector, light_vector] = payload->material.sample(seed, view_vector);
+            // if (half_vector.dot(payload->normal) < 0) {
+            //     return Vec3f(1);
+            // } else {
+            //     return Vec3f(0);
+            // }
+            Vec3f rand_vector = Vec3f::random(seed);
+            Vec3f light_vector;
+            if (rand_float(seed) > 0.96f) {
+                light_vector = (ray.direction.reflect(payload->normal) + rand_vector.scale(payload->material.roughness)).normalize();
+            } else {
+                if (rand_vector.dot(payload->normal) < 0) {
+                    rand_vector = -rand_vector;
+                }
+                light_vector = rand_vector.normalize();
+            }
             Vec3f half_vector = (view_vector + light_vector).normalize();
 
+            f32 NdotV = std::abs(payload->normal.dot(view_vector)) + 1e-5f;
+            f32 NdotL = clamp(payload->normal.dot(light_vector), 0, 1);
+            f32 NdotH = clamp(payload->normal.dot(half_vector), 0, 1);
+            f32 LdotH = clamp(light_vector.dot(half_vector), 0, 1);
             ray.origin = payload->hit_position;
             ray.direction = light_vector;
 
             light += payload->material.get_emission() * contribution;
-            contribution *= payload->material.brdf(light_vector, view_vector, payload->normal, half_vector) * payload->normal.dot(light_vector);
+            contribution *= payload->material.brdf(NdotV, NdotH, LdotH, NdotL);
 
-            payload = this->m_objects.closest_hit(ray, 0.01f, std::numeric_limits<f32>::max());
         }
         return light;
     }
@@ -101,7 +119,7 @@ public:
 
     void render(u32 max_bounces) {
         this->m_camera.calculate_ray_directions();
-        BS::thread_pool thread_pool(16);
+        BS::thread_pool thread_pool(8);
         for (i32 y = m_camera.window_height - 1; y >= 0; y--) {
             thread_pool.push_loop(m_camera.window_width, [this, y, max_bounces](const int a, const int b) {
                 for (int x = a; x < b; x++) {

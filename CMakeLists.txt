@@ -8,10 +8,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (WIN32)
 else()
     if(CMAKE_BUILD_TYPE STREQUAL "Release") 
-        add_compile_options(-Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20 -fno-exceptions -ffast-math -fno-omit-frame-pointer)
+        add_compile_options(-Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20 -fno-exceptions -ffast-math -fdiagnostics-color=always)
         add_link_options(-fuse-ld=lld)
     else()
-        add_compile_options(-g -fsanitize=address -Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20 -fno-exceptions)
+        add_compile_options(-g -fsanitize=address -Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20 -fno-exceptions -fdiagnostics-color=always)
         add_link_options(-fuse-ld=lld -fsanitize=address)
     endif()
 endif()
@@ -74,7 +74,6 @@ add_executable(renderer
 
     src/renderer/renderer.cpp
     src/renderer/renderer.hpp
-    src/renderer/vk_enum_string_helper.hpp
     src/window/window.hpp
     
     ${LINEAR_ALGBERA_HEADERS}

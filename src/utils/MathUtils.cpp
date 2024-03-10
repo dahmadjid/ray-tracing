@@ -8,7 +8,7 @@ u32 pcg_hash(u32 seed) {
     return (word >> 22u) ^ word;
 }
 
-
+// generate float between 0 and 1 
 float rand_float(u32& seed) {
     seed = pcg_hash(seed);
     return static_cast<float>(seed) / static_cast<float>(std::numeric_limits<u32>::max());
