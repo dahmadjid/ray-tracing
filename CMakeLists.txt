@@ -9,10 +9,10 @@ if (WIN32)
 else()
     if(CMAKE_BUILD_TYPE STREQUAL "Release") 
         add_compile_options(-Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20 -fno-exceptions -ffast-math -fdiagnostics-color=always)
-        add_link_options(-fuse-ld=lld)
+        add_link_options(-fuse-ld=mold)
     else()
         add_compile_options(-g -fsanitize=address -Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20 -fno-exceptions -fdiagnostics-color=always)
-        add_link_options(-fuse-ld=lld -fsanitize=address)
+        add_link_options(-fuse-ld=mold -fsanitize=address)
     endif()
 endif()
 
@@ -53,8 +53,8 @@ set(UTILS
     src/utils/Overloaded.hpp
     src/utils/MathUtils.hpp
     src/utils/MathUtils.cpp
-    src/utils/BMP.hpp
     src/utils/BMP.cpp
+    src/utils/BMP.hpp
     src/utils/Obj.hpp
     src/utils/Obj.cpp
     

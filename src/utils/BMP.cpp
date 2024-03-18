@@ -28,7 +28,7 @@ void write_bmp_image(std::string_view filename, std::vector<Vec4<u8>> image, u32
     file.write(reinterpret_cast<const char*>(&header), sizeof(BMPHeader));
 
     // Write image data
-    for (int y = height; y > 0; --y) {
+    for (int y = height -1; y >= 0; --y) {
         for (u32 x = 0; x < width; ++x) {
             // Assuming image is stored row-wise
             Vec4<u8>& pixel = image[y * width + x];
@@ -36,7 +36,5 @@ void write_bmp_image(std::string_view filename, std::vector<Vec4<u8>> image, u32
             file.write((char*)rgb, 3);
         }
     }
-
-    // Close the file
     file.close();
 }

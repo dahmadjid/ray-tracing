@@ -50,8 +50,6 @@ public:
     Scene(Scene&) = delete;
     Scene& operator=(Scene&) = delete;
 
-
-
     template<typename T>
     void add_object(T&& hittable_object) {
         m_objects.add_object(std::forward<T>(hittable_object));
@@ -61,11 +59,6 @@ public:
     inline T& get_object(u32 index) {
         return m_objects.get_object<T>(index);
     }
-
-    /*template<typename T>
-    void add_light(T&& light) {
-        m_lights.emplace_back(std::forward<T>(light));
-    }*/
 
     Vec3f per_pixel(
         u32 x,
@@ -79,39 +72,37 @@ public:
         for (u32 bounce = 0; bounce < max_bounces; ++bounce) {
             std::optional<HitPayload> payload = this->m_objects.closest_hit(ray, 0.01f, std::numeric_limits<f32>::max());
             if (!payload.has_value()) {
-                //  light += Vec3f(0.6f, 0.7f, 0.9f) * contribution;
+                // light += Vec3f(0.6f, 0.7f, 0.9f) * contribution;
                 break;
             }
             Vec3f view_vector = -ray.direction;
             
-            // auto [half_vector, light_vector] = payload->material.sample(seed, view_vector);
-            // if (half_vector.dot(payload->normal) < 0) {
-            //     return Vec3f(1);
-            // } else {
-            //     return Vec3f(0);
+            auto [half_vector, light_vector, pdf] = payload->material.sample(seed, view_vector, payload->normal);
+
+            // Vec3f light_vector;
+            // Vec3f rand_vector = Vec3f::random(seed);
+            // // if (rand_float(seed) > 0.95f) {
+            // //     light_vector = (ray.direction.reflect(payload->normal) + rand_vector.scale(payload->material.roughness)).normalize();
+            // // } else {
+            // if (rand_vector.dot(payload->normal) < 0) {
+            //     rand_vector = -rand_vector;
             // }
-            Vec3f rand_vector = Vec3f::random(seed);
-            Vec3f light_vector;
-            if (rand_float(seed) > 0.96f) {
-                light_vector = (ray.direction.reflect(payload->normal) + rand_vector.scale(payload->material.roughness)).normalize();
-            } else {
-                if (rand_vector.dot(payload->normal) < 0) {
-                    rand_vector = -rand_vector;
-                }
-                light_vector = rand_vector.normalize();
-            }
-            Vec3f half_vector = (view_vector + light_vector).normalize();
+            // light_vector = rand_vector.normalize();
+            // // }
+            // Vec3f half_vector = (view_vector + light_vector).normalize();
+            // f32 pdf = 1.0f;
+            // // }
 
             f32 NdotV = std::abs(payload->normal.dot(view_vector)) + 1e-5f;
             f32 NdotL = clamp(payload->normal.dot(light_vector), 0, 1);
             f32 NdotH = clamp(payload->normal.dot(half_vector), 0, 1);
             f32 LdotH = clamp(light_vector.dot(half_vector), 0, 1);
-            ray.origin = payload->hit_position;
-            ray.direction = light_vector;
 
             light += payload->material.get_emission() * contribution;
-            contribution *= payload->material.brdf(NdotV, NdotH, LdotH, NdotL);
 
+            contribution *= payload->material.brdf(NdotV, NdotH, LdotH, NdotL) / pdf;
+            ray.origin = payload->hit_position;
+            ray.direction = light_vector;
         }
         return light;
     }
@@ -128,9 +119,9 @@ public:
                     m_camera.accumulation_data[x + y * m_camera.window_width] += color;
                     auto light =  m_camera.accumulation_data[x + y * m_camera.window_width] / (f32)m_camera.frame_index;
                     m_camera.image[x + y * m_camera.window_width] = Vec4<u32>(
-                                                                    (u32)(light.x * 255.0f), 
-                                                                    (u32)(light.y * 255.0f), 
-                                                                    (u32)(light.z * 255.0f), 
+                                                                    (u32)(std::sqrt(light.x) * 255.0f), 
+                                                                    (u32)(std::sqrt(light.y) * 255.0f), 
+                                                                    (u32)(std::sqrt(light.z) * 255.0f), 
                                                                     255
                                                                 ).clamp(0, 255).cast<u8>();; 
 
@@ -139,14 +130,6 @@ public:
         }
         thread_pool.wait_for_tasks();
         m_camera.frame_index += 1;
-
-        // std::vector<Vec3f> expose;
-        // for (i32 y = m_camera.window_height - 1; y >= 0; y--) {
-        //     for (u32 x = 0; x < m_camera.window_width; x++) {
-        //         per_pixel(x, y, 1, image, expose);
-        //     }
-        // }
-
     }
 };  
 
