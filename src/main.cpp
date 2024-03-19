@@ -1,25 +1,17 @@
 #include <chrono>
-#include <cstdio>
 #include <exception>
 #include <fmt/core.h>
-#include <memory>
-#include <random>
 #include <thread>
 #include "linear_algebra/Vec3.decl.hpp"
 #include "linear_algebra/Vec3.hpp"
 #include "ray-tracing/Material.hpp"
-#include "ray-tracing/Ray.hpp"
 #include "utils/BMP.hpp"
-#include "utils/MathUtils.hpp"
-#include "utils/ScopedTimer.hpp"
 #include "window/window.hpp"
 #include "renderer/renderer.hpp"
-#include "utils/Panic.hpp"
 #include "ray-tracing/Camera.hpp"
 #include "ray-tracing/Scene.hpp"
 #include "ray-tracing/objects.hpp"
 #include "utils/Obj.hpp"
-#include "utils/ScopedTimer.hpp"
 
 using namespace RayTracer;
 
@@ -27,13 +19,16 @@ constexpr Vec3f u8_color_to_float(Vec3<u8>&& color) {
     return Vec3f(color.x / 255.0f, color.y / 255.0f, color.z / 255.0f);
 }
 
-
-
-int scene_1() {
-    Camera cam(45, Vec3f(0.046539098f, 1.4768682f, 6.134056f), 0.1f, 0, 1280, 729);
+int main() {
+    Camera cam(45, Vec3f(0.046539098f, 1.4768682f, 6.134056f), 0.1f, 0, 800, 600);
     Window w(cam);
     auto r = renderer::Renderer(w);
     Scene scene(cam);
+    scene.add_object(Mesh(
+        Vec3f(), 
+        Material({ .albedo = Vec3(1.0f, 1.0f, 1.0f), .emission_power = 5.0f }),
+        load_obj("light.obj")
+    ));
 
     scene.add_object(Sphere(
         Vec3f(-.5f,  0.41f, 0.f),
@@ -56,11 +51,6 @@ int scene_1() {
     );
     
 
-    scene.add_object(Mesh(
-        Vec3f(), 
-        Material({ .albedo = Vec3(1.0f, 1.0f, 1.0f), .emission_power = 5.0f }),
-        load_obj("light.obj")
-    ));
 
     scene.add_object(Box(
         Vec3f(-2, 1, 0),
@@ -105,7 +95,6 @@ int scene_1() {
         }
     });
 
-
     w.custom_key_cbs.push_back(CustomKeyCallback{
         .key = GLFW_KEY_3,
         .cb = [&selected_index, &scene, &cam]{
@@ -123,19 +112,15 @@ int scene_1() {
             cam.reset_accu_data();
         }
     });
-    using namespace std::chrono;
-    
-    auto now = steady_clock::now();
+    u32 spp = 10;
 
     while(!glfwWindowShouldClose(w.m_glfw_window)) {
         glfwPollEvents();
-        scene.render(5);    
-        auto time_since = duration_cast<seconds>(steady_clock::now() - now).count();
-        if (time_since > 600) {
-            write_bmp_image("render.bmp", cam.image, cam.window_width, cam.window_height);
-            std::terminate();
-        }
-        
+        if (scene.m_camera.frame_index < spp) {
+            scene.render(5);    
+            // write_bmp_image("render.bmp", cam.image, cam.window_width, cam.window_height);
+            // std::terminate();
+        } 
         if (w.framebuffer_resized) {
             r.recreate_swap_chain();
             w.framebuffer_resized = false;
@@ -151,8 +136,4 @@ int scene_1() {
     
     r.wait_for_device_idle();
     return 0;
-}
-
-int main() {
-    return scene_1();
 }

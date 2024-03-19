@@ -42,14 +42,14 @@ f32 Material::V_SmithGGXCorrelated(f32 NoV, f32 NoL) const {
 
 Vec3f Material::brdf(f32 NdotV, f32 NdotH, f32 LdotH, f32 NdotL) const {
 
-    f32 D = D_GGX(NdotH);
-    Vec3f  F = F_Schlick(LdotH, mix(Vec3f(0.04f), this->albedo, this->metallic));
-    f32 V_SmithGGX = V_SmithGGXCorrelated(NdotV, NdotL);
+    // f32 D = D_GGX(NdotH);
+    // Vec3f  F = F_Schlick(LdotH, mix(Vec3f(0.04f), this->albedo, this->metallic));
+    // f32 V_SmithGGX = V_SmithGGXCorrelated(NdotV, NdotL);
 
-    Vec3f specular = D * V_SmithGGX * F;
+    // Vec3f specular = D * V_SmithGGX * F;
     Vec3f diffuse = this->albedo * INV_PI;
-    Vec3f brdf = diffuse * (-F + 1.0f) * (1.0f - this->metallic) + specular;
-    return brdf * NdotL;
+    Vec3f brdf = diffuse;
+    return brdf;
 }
 // cosine weighted sampling
 std::tuple<Vec3f, Vec3f, f32> Material::sample(u32& seed, const Vec3f& view_vector, const Vec3f& normal_vector) const {
@@ -70,6 +70,11 @@ std::tuple<Vec3f, Vec3f, f32> Material::sample(u32& seed, const Vec3f& view_vect
     f32 pdf = cos_theta / PI;
     return { half_vector, light_vector, pdf };
 }
+
+f32 Material::pdf(const Vec3f& sampled_light_dir, const Vec3f& hit_position, const Vec3f& normal) {
+    return clamp(normal.dot(sampled_light_dir), 0, 1) / PI;
+}
+
 
 }
 

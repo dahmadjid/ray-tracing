@@ -1,8 +1,10 @@
 #include "ray-tracing/objects.hpp"
 #include "ray-tracing/Ray.hpp"
+#include "utils/MathUtils.hpp"
 #include "utils/Panic.hpp"
 #include <cmath>
 #include <fmt/core.h>
+#include <limits>
 #include <optional>
 #include <utils/ScopedTimer.hpp>
 
@@ -152,6 +154,28 @@ namespace RayTracer {
         return payload;
     }
 
+    // https://www.realtimerendering.com/raytracinggems/unofficial_RayTracingGems_v1.9.pdf 16.5.2
+    std::pair<Vec3f, f32> Triangle::sample(u32& seed) {
+        f32 u0 = rand_float(seed);
+        f32 u1 = rand_float(seed);
+        f32 beta = 1 - std::sqrt(u0);
+        f32 gamma = (1 - beta) * u1;
+        f32 alpha = 1 - beta - gamma;
+        return {Vec3f(alpha*this->m_vertices[0] + beta*this->m_vertices[1] + gamma*this->m_vertices[2]), m_sampling_pdf};
+    }
+
+    f32 Triangle::pdf(const Vec3f& sampled_light_dir, const Vec3f& hit_position, const Vec3f& hit_normal) {
+        if (!this->hit(Ray{ .origin = hit_position, .direction = sampled_light_dir }, 0.001f, std::numeric_limits<f32>::max()).has_value()) {
+            return 0.0f;
+        }
+
+        if (this->m_normal.dot(sampled_light_dir) >= 0) {
+            return 0.0f;
+        }
+
+        return m_sampling_pdf;
+    }
+
     std::optional<HitPayload> Mesh::hit(const Ray& ray, f32 t_min, f32 t_max) const {
         std::optional<HitPayload> closest_payload = std::nullopt;
         for (const auto& tri : m_triangles) {
@@ -162,5 +186,38 @@ namespace RayTracer {
             }
         }
         return closest_payload;
+    }
+
+    std::optional<u32> Mesh::get_intersecting_triangle(const Ray& ray, f32 t_min, f32 t_max) const {
+        std::optional<u32> closest_triangle = std::nullopt;
+
+        for (u32 i = 0; i < m_triangles.size(); ++i) {
+            auto payload = m_triangles[i].hit(ray, t_min, t_max);
+            if (payload.has_value()) {
+                closest_triangle = i;
+                t_min = payload->t;
+            }
+        }
+        return closest_triangle;
+    }
+
+    std::pair<Vec3f, f32> Mesh::sample(u32& seed) {
+        f32 random = rand_float(seed);
+        u32 random_selected_index = (u32)std::floor(random * this->m_triangles.size());
+        return this->m_triangles[random_selected_index].sample(seed);
+    }
+
+    f32 Mesh::pdf(const Vec3f& sampled_light_dir, const Vec3f& hit_position, const Vec3f& hit_normal) {
+        auto triangle_index = this->get_intersecting_triangle(Ray{ .origin = hit_position, .direction = sampled_light_dir }, 0.001f, std::numeric_limits<f32>::max());
+        if (!triangle_index.has_value()) {
+            return 0.0f;
+        }
+        
+        Triangle tri = m_triangles[*triangle_index];
+        if (tri.m_normal.dot(sampled_light_dir) >= 0) {
+            return 0.0f;
+        }
+        
+        return tri.m_sampling_pdf;
     }
 };

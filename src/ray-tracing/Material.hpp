@@ -58,6 +58,8 @@ public:
 
     // auto [half_vector, light_vector, pdf]
     std::tuple<Vec3f, Vec3f, f32> sample(u32& seed, const Vec3f& view_vector, const Vec3f& normal_vector) const;
+    f32 pdf(const Vec3f& sampled_light_dir, const Vec3f& hit_position, const Vec3f& hit_normal);
+    
     Vec3f brdf(f32 NdotV, f32 NdotH, f32 LdotH, f32 NdotL) const;
     inline Vec3f get_emission() {
         return Vec3(this->albedo).scale(emission_power);

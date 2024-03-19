@@ -24,7 +24,7 @@ public:
     Window(RayTracer::Camera& cam): cam(cam) {
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        m_glfw_window = glfwCreateWindow((i32)cam.window_width, (i32)cam.window_height, "Vulkan", nullptr, nullptr);
+        m_glfw_window = glfwCreateWindow((i32)cam.window_width, (i32)cam.window_height, "glfw", nullptr, nullptr);
         
         glfwSetWindowUserPointer(m_glfw_window, this);
         glfwSetKeyCallback(m_glfw_window, Window::key_callback);

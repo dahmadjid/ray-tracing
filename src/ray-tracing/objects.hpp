@@ -43,10 +43,14 @@ public:
     }
     
     template<same_as_any<Ts...>  T>
-    T& get_object(u32 index) {
+    const T& get_object(u32 index) const {
         return std::get<T>(m_hittable_objects[index]);
     }
     
+    template<same_as_any<Ts...>  T>
+    T& get_object(u32 index) {
+        return std::get<T>(m_hittable_objects[index]);
+    }
 
     std::optional<HitPayload> closest_hit(const Ray& ray, f32 t_min, f32 t_max) const {
         std::optional<HitPayload> closest_payload = std::nullopt;
@@ -114,6 +118,10 @@ struct Triangle {
     Vec3f position() const { return m_position; }
     void set_position(const Vec3f& pos) { m_position = pos; }
     Material material() const { return m_material; }
+
+    // position in object and pdf
+    std::pair<Vec3f, f32> sample(u32& seed);
+    f32 pdf(const Vec3f& sampled_light_dir, const Vec3f& hit_position, const Vec3f& hit_normal);
     Triangle(
         const Vec3f& position,
         const Material& material,
@@ -124,6 +132,14 @@ struct Triangle {
         m_edges.y = m_vertices.z - m_vertices.y;
         m_edges.z = m_vertices.x - m_vertices.z;
         m_normal =  m_edges.x.cross(m_edges.y).normalize();
+
+
+        // https://math.stackexchange.com/questions/128991/how-to-calculate-the-area-of-a-3d-triangle
+        Vec3f ab = m_vertices.x - m_vertices.y;
+        Vec3f ac = m_vertices.x - m_vertices.z;
+        f32 ABdotAC = ab.dot(ac);
+        f32 area = 0.5f * std::sqrt(ab.length_squared() * ac.length_squared() - ABdotAC * ABdotAC);
+        m_sampling_pdf = 1.0f / area;
     }
     
     Vec3f m_position;
@@ -131,6 +147,7 @@ struct Triangle {
     Vec3<Vec3f> m_vertices;
     Vec3<Vec3f> m_edges;
     Vec3f m_normal;
+    f32 m_sampling_pdf;
 };
 
 struct Mesh {
@@ -138,6 +155,11 @@ struct Mesh {
     Vec3f position() const { return m_position; }
     void set_position(const Vec3f& pos) { m_position = pos; }
     Material material() const { return m_material; }
+
+    // position in object and pdf
+    std::pair<Vec3f, f32> sample(u32& seed);
+    f32 pdf(const Vec3f& sampled_light_dir, const Vec3f& hit_position, const Vec3f& hit_normal);
+    std::optional<u32> get_intersecting_triangle(const Ray& ray, f32 t_min, f32 t_max) const;
 
     Mesh(
         const Vec3f& position,
@@ -215,8 +237,8 @@ struct PointLight {
     Vec3f color;
 };
 
+
 using ObjectsList = HittableList<Sphere, Box, Triangle, Mesh>;
-using LightList = std::vector<std::variant<PointLight>>;
 
 
 };

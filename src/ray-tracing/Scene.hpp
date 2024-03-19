@@ -4,7 +4,6 @@
 #include "linear_algebra/Vec3.hpp"
 #include "linear_algebra/Vec4.hpp"
 #include "ray-tracing/Camera.hpp"
-#include "ray-tracing/BRDF.hpp"
 #include "ray-tracing/objects.hpp"
 #include "ray-tracing/Ray.hpp"
 #include <cmath>
@@ -26,6 +25,7 @@
 #include <variant>
 #include <vector>
 #include "utils/BS_thread_pool.hpp"
+#include "utils/MathUtils.hpp"
 #include "utils/Overloaded.hpp"
 #include "utils/Panic.hpp"
 #include "utils/types.hpp"
@@ -42,6 +42,7 @@ namespace RayTracer {
 
 class Scene {
     ObjectsList m_objects;
+    
 public:
     Camera& m_camera;
     
@@ -69,16 +70,37 @@ public:
         Vec3f light{ 0.0f };
         Ray ray = Ray{.origin=m_camera.position(), .direction=m_camera.get_ray(x, y)};
         Vec3f contribution = Vec3f(1.0f);
+        Mesh light_mesh = m_objects.get_object<Mesh>(0); 
+
         for (u32 bounce = 0; bounce < max_bounces; ++bounce) {
-            std::optional<HitPayload> payload = this->m_objects.closest_hit(ray, 0.01f, std::numeric_limits<f32>::max());
+            std::optional<HitPayload> payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
             if (!payload.has_value()) {
                 // light += Vec3f(0.6f, 0.7f, 0.9f) * contribution;
                 break;
             }
             Vec3f view_vector = -ray.direction;
             
-            auto [half_vector, light_vector, pdf] = payload->material.sample(seed, view_vector, payload->normal);
+            Vec3f light_vector;
+            f32 pdf;
 
+            if (rand_float(seed) > 0.5f) {
+                Vec3f rand_vector = Vec3f::random(seed);
+                if (rand_vector.dot(payload->normal) < 0) {
+                    rand_vector = -rand_vector;
+                }
+                light_vector = rand_vector.normalize();
+                // auto sample = payload->material.sample(seed, view_vector, payload->normal);
+                // light_vector = std::get<1>(sample);
+                // pdf = std::get<2>(sample);
+                pdf = 0.5f + 0.5f * light_mesh.pdf(light_vector, payload->hit_position, payload->normal);
+            } else {
+                auto sample = light_mesh.sample(seed);
+                light_vector = sample.first - payload->hit_position;
+                pdf = 0.5f * sample.second + 0.5f;
+            }
+            if (pdf < 0.001) {
+                return Vec3f(0.0, 0.0, 0.0);
+            }
             // Vec3f light_vector;
             // Vec3f rand_vector = Vec3f::random(seed);
             // // if (rand_float(seed) > 0.95f) {
@@ -95,12 +117,12 @@ public:
 
             f32 NdotV = std::abs(payload->normal.dot(view_vector)) + 1e-5f;
             f32 NdotL = clamp(payload->normal.dot(light_vector), 0, 1);
-            f32 NdotH = clamp(payload->normal.dot(half_vector), 0, 1);
-            f32 LdotH = clamp(light_vector.dot(half_vector), 0, 1);
+            f32 NdotH = clamp(payload->normal.dot(Vec3f(0.2f)), 0, 1);
+            f32 LdotH = clamp(light_vector.dot(Vec3f(0.2f)), 0, 1);
 
             light += payload->material.get_emission() * contribution;
 
-            contribution *= payload->material.brdf(NdotV, NdotH, LdotH, NdotL) / pdf;
+            contribution *= payload->material.brdf(NdotV, NdotH, LdotH, NdotL) * NdotL / pdf;
             ray.origin = payload->hit_position;
             ray.direction = light_vector;
         }
