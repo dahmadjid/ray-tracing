@@ -8,10 +8,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (WIN32)
 else()
     if(CMAKE_BUILD_TYPE STREQUAL "Release") 
-        add_compile_options(-Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20 -fno-exceptions -ffast-math -fdiagnostics-color=always)
+        add_compile_options(-Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20 -ffast-math -fdiagnostics-color=always)
         add_link_options(-fuse-ld=mold)
     else()
-        add_compile_options(-g -fsanitize=address -Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20 -fno-exceptions -fdiagnostics-color=always)
+        add_compile_options(-g -fsanitize=address -Wall -Wextra -Wpedantic -Wunused -Wconversion -O3 -std=c++20 -fdiagnostics-color=always)
         add_link_options(-fuse-ld=mold -fsanitize=address)
     endif()
 endif()
@@ -63,8 +63,6 @@ set(UTILS
 add_executable(renderer 
     src/main.cpp
     src/ray-tracing/objects.cpp
-    src/ray-tracing/BRDF.cpp
-    src/ray-tracing/BRDF.hpp
     src/ray-tracing/Scene.hpp
     src/ray-tracing/objects.hpp
     src/ray-tracing/Ray.hpp

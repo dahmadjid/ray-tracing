@@ -74,32 +74,32 @@ public:
                 break;
             
             case GLFW_KEY_W:
-                this_window->cam.update_z_position(0.2f);
+                this_window->cam.update_z_position(0.1f);
                 break;
 
             case GLFW_KEY_S:
-                this_window->cam.update_z_position(-0.2f);
+                this_window->cam.update_z_position(-0.1f);
                 break;
 
             case GLFW_KEY_D:
-                this_window->cam.update_x_position(0.2f);
+                this_window->cam.update_x_position(0.1f);
                 break;
 
             case GLFW_KEY_A:
-                this_window->cam.update_x_position(-0.2f);
+                this_window->cam.update_x_position(-0.1f);
                 break;
 
             case GLFW_KEY_Q:
-                this_window->cam.update_y_position(0.2f);
+                this_window->cam.update_y_position(0.1f);
                 break;
 
             case GLFW_KEY_E:
-                this_window->cam.update_y_position(-0.2f);
+                this_window->cam.update_y_position(-0.1f);
                 break;
 
             default:
                 for (const auto& cb: this_window->custom_key_cbs) {
-                    if (cb.key == key && action == 0 && cb.cb != nullptr) {
+                    if (cb.key == key && cb.cb != nullptr) {
                         cb.cb();
                     }
                 }
