@@ -41,7 +41,7 @@ int main() {
     // file.close();
 
     // return 0;
-    Camera cam(45, Vec3f(0.046539098f, -0.042931885f, 5.7400503f), 0, 0, 1280, 1280);
+    Camera cam(45, Vec3f(0.046539098f, -0.042931885f, 5.7400503f), 0, 0, 800, 800);
     Window w(cam);
     auto r = renderer::Renderer(w);
     Scene scene(cam);

@@ -28,11 +28,7 @@ std::tuple<Vec3f, Vec3f, f32> Material::sample(u32& seed, const Vec3f& view_vect
     f32 phi = 2 * PI * r2;
     f32 cos_phi = std::cos(phi);
     f32 sin_phi = std::sin(phi);
-    bool sample_diffuse = false;
     if (this->metallic == 0) {
-        sample_diffuse = true;
-    }
-    if (sample_diffuse) {
         f32 sin_theta = std::sqrt(r1);
 
         f32 x = cos_phi * sin_theta;
@@ -99,6 +95,14 @@ Vec3f Material::brdf(f32 NdotV, f32 NdotH, f32 LdotH, f32 NdotL) const {
     Vec3f Fsheen = FH * sheen * Csheen;
 
     return ((1 / PI) * mix(Fd, ss, subsurface) * Cdlin + Fsheen) * (1 - metallic) + Gs * Fs * Ds;
+}
+
+f32 Material::pdf(f32 NdotH, f32 NdotL, f32 VdotH) {
+    if (this->metallic == 0) {
+        return NdotL / PI;
+    } else {
+        return GTR2(NdotH) * NdotH / (4.0f * VdotH);
+    }
 }
 
 }  // namespace RayTracer

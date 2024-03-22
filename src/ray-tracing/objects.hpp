@@ -173,7 +173,10 @@ struct Mesh {
     }
 
     // position in object and pdf
+    // pdf can NOT be 0 in this case
     std::pair<Vec3f, f32> sample(u32& seed);
+
+    // pdf CAN be 0
     f32 pdf(const Vec3f& sampled_light_dir, const Vec3f& hit_position, const Vec3f& hit_normal);
     std::optional<u32> get_intersecting_triangle(const Ray& ray, f32 t_min, f32 t_max) const;
 
