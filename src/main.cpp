@@ -51,10 +51,10 @@ int main() {
 
     scene.add_object(Sphere(
         Vec3f(-.5f, -0.59f, 0.f), 0.4f,
-        Material({
-            .albedo = u8_color_to_float(Vec3<u8>(218, 165, 32)),
+        Material(MaterialParams{
+            .albedo = u8_color_to_float(Vec3<u8>(200, 200, 200)),
             .metallic = 0.f,
-            .roughness = 0.05f,
+            .roughness = 0.5f,
         })
     ));
 

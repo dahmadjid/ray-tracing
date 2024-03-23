@@ -40,19 +40,23 @@ std::tuple<Vec3f, Vec3f, f32> Material::sample(u32& seed, const Vec3f& view_vect
         Vec3f half_vector = (light_vector + view_vector).normalize();
         return {light_vector, half_vector, pdf};
     } else {
-        float theta = std::acos(std::sqrt((1.0f - r1) / ((this->alpha - 1.0f) * r1 + 1.0f)));
+        Vec3f Vh = Vec3f(this->alpha * view_vector.x, this->alpha * view_vector.y, view_vector.z).normalize();
+        float z = ((1.0f - r1) * (1.0f + Vh.z)) - Vh.z;
+        float sinTheta = std::sqrt(clamp(1.0f - z * z, 0.0f, 1.0f));
+        float x = sinTheta * cos_phi;
+        float y = sinTheta * sin_phi;
 
-        f32 x = cos_phi * std::sin(theta);
-        f32 y = sin_phi * std::sin(theta);
-        f32 z = std::cos(theta);
-
+        // compute halfway direction;
+        Vec3f Nh = Vec3f(x, y, z) + Vh;
         ONB onb{normal_vector};
-        Vec3f half_vector = onb.local(Vec3f(x, y, z));
+        Vec3f half_vector = onb.local(Vec3f(this->alpha * Nh.x, this->alpha * Nh.y, std::max(0.0f, Nh.z)).normalize());
+
         Vec3f light_vector = -view_vector.reflect(half_vector);
 
-        f32 VdotH = half_vector.dot(view_vector);
-        f32 NdotH = normal_vector.dot(half_vector);
-        f32 pdf = GTR2(NdotH) * NdotH / (4.0f * VdotH);
+        f32 NdotH = half_vector.dot(normal_vector);
+        f32 NdotV = view_vector.dot(normal_vector);
+        f32 pdf = GTR2(NdotH) * smithG_GGX(NdotV) / (4.0f * NdotV);
+
         return {light_vector, half_vector, pdf};
     }
 }
@@ -97,12 +101,11 @@ Vec3f Material::brdf(f32 NdotV, f32 NdotH, f32 LdotH, f32 NdotL) const {
     return ((1 / PI) * mix(Fd, ss, subsurface) * Cdlin + Fsheen) * (1 - metallic) + Gs * Fs * Ds;
 }
 
-f32 Material::pdf(f32 NdotH, f32 NdotL, f32 VdotH) {
+f32 Material::pdf(f32 NdotH, f32 NdotL, f32 NdotV) {
     if (this->metallic == 0) {
         return NdotL / PI;
     } else {
-        return GTR2(NdotH) * NdotH / (4.0f * VdotH);
+        return GTR2(NdotH) * smithG_GGX(NdotV) / (4.0f * NdotV);
     }
 }
-
 }  // namespace RayTracer

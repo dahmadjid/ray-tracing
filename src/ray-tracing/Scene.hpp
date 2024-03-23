@@ -66,7 +66,10 @@ public:
         Vec3f contribution = Vec3f(1.0f);
         Mesh light_mesh = m_objects.get_object<Mesh>(0);
         std::optional<HitPayload> payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
-        if (payload.has_value() && payload->material.get_emission() != Vec3f(0.0f)) {
+        if (!payload.has_value()) {
+            return light;
+        }
+        if (payload->material.get_emission() != Vec3f(0.0f)) {
             return payload->material.get_emission();
         }
 
@@ -95,7 +98,7 @@ public:
                         f32 NdotH = payload->normal.dot(half_vector);
                         f32 LdotH = light_vector.dot(half_vector);
 
-                        f32 mis_pdf = (pdf + payload->material.pdf(NdotH, NdotL, half_vector.dot(view_vector)));
+                        f32 mis_pdf = (pdf + payload->material.pdf(NdotH, NdotL, NdotV));
 
                         Vec3f light_contribution =
                             contribution * payload->material.brdf(NdotV, NdotH, LdotH, NdotL) * NdotL / mis_pdf;
@@ -147,8 +150,9 @@ public:
                     auto light = m_camera.accumulation_data[x + y * m_camera.window_width] / (f32)m_camera.frame_index;
                     m_camera.image[x + y * m_camera.window_width] =
                         Vec4<u32>(
-                            (u32)(std::sqrt(light.x) * 255.0f), (u32)(std::sqrt(light.y) * 255.0f),
-                            (u32)(std::sqrt(light.z) * 255.0f), 255
+                            (u32)(std::pow(light.x, 1.0f / 2.2f) * 255.0f),
+                            (u32)(std::pow(light.y, 1.0f / 2.2f) * 255.0f),
+                            (u32)(std::pow(light.z, 1.0f / 2.2f) * 255.0f), 255
                         )
                             .clamp(0, 255)
                             .cast<u8>();
