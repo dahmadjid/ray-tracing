@@ -131,8 +131,8 @@ struct Triangle {
     }
 
     // position in object and pdf
-    std::pair<Vec3f, f32> sample(u32& seed);
-    f32 pdf(const Vec3f& sampled_light_dir, const Vec3f& hit_position, const Vec3f& hit_normal);
+    std::pair<Vec3f, f32> sample(u32& seed) const;
+    f32 pdf(const Vec3f& sampled_light_dir, const Vec3f& hit_position, const Vec3f& hit_normal) const;
 
     Triangle(const Vec3f& position, const Material& material, const Vec3<Vec3f>& vertices)
         : m_position(position), m_material(material), m_vertices(vertices) {
@@ -174,10 +174,10 @@ struct Mesh {
 
     // position in object and pdf
     // pdf can NOT be 0 in this case
-    std::pair<Vec3f, f32> sample(u32& seed);
+    std::pair<Vec3f, f32> sample(u32& seed) const;
 
     // pdf CAN be 0
-    f32 pdf(const Vec3f& sampled_light_dir, const Vec3f& hit_position, const Vec3f& hit_normal);
+    f32 pdf(const Vec3f& sampled_light_dir, const Vec3f& hit_position, const Vec3f& hit_normal) const;
     std::optional<u32> get_intersecting_triangle(const Ray& ray, f32 t_min, f32 t_max) const;
 
     Mesh(const Vec3f& position, const Material& material, const ParsedObj& obj)

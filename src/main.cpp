@@ -24,56 +24,47 @@ constexpr Vec3f u8_color_to_float(Vec3<u8>&& color) {
 }
 
 int main() {
-    // ONB onb{Vec3f(0, 0, 1)};
-    // std::string out = "x,y,z\n";
-    // for (int i = 0; i < 1000; i++) {
-    //     u32 seed;
-    //     auto [light_vector, pdf] = Material(MaterialParams{
-    //                                             .albedo = Vec3f(1, 0, 0),
-    //                                             .roughness = 0.0f,
-    //                                         })
-    //                                    .sample(seed, Vec3f(0, -1, -1).normalize(), Vec3f(0, 1, 0));
-    //     // light_vector = onb.local(light_vector);
-    //     out += fmt::format("{:.2f},{:.2f},{:.2f}\n", light_vector.x, light_vector.y, light_vector.z);
-    // }
-    // std::ofstream file("3dplot.csv");
-    // file << out;
-    // file.close();
-
-    // return 0;
-    Camera cam(45, Vec3f(0.046539098f, -0.042931885f, 5.7400503f), 0, 0, 800, 800);
+    Camera cam(45, Vec3f(0.046539098f, -0.042931885f, 5.7400503f), 0, 0, 1280, 1280);
     Window w(cam);
     auto r = renderer::Renderer(w);
     Scene scene(cam);
     scene.add_object(
-        Mesh(Vec3f(), Material({.albedo = Vec3(1.0f, 1.0f, 1.0f), .emission_power = 5.0f}), load_obj("light.obj"))
+        Mesh(
+            Vec3f(), 
+            Material({
+                .type = MaterialType::EMISSIVE, 
+                .albedo = Vec3(1.0f, 1.0f, 1.0f), 
+                .emission_power = 2.5f}
+            ), 
+            load_obj("light.obj")
+        )
     );
 
     scene.add_object(Sphere(
         Vec3f(-.5f, -0.59f, 0.f), 0.4f,
-        Material(MaterialParams{
-            .albedo = u8_color_to_float(Vec3<u8>(200, 200, 200)),
-            .metallic = 0.f,
-            .roughness = 0.5f,
+        Material({
+            .type = MaterialType::METAL,
+            .albedo = u8_color_to_float(Vec3<u8>(218, 165, 32)),
+            .roughness = 0.05f,
         })
     ));
 
     scene.add_object(Sphere(
         Vec3f(.5f, -0.59f, 0.f), 0.4f,
         Material({
+            .type = MaterialType::METAL,
             .albedo = u8_color_to_float(Vec3<u8>(218, 165, 32)),
-            .metallic = 1.f,
             .roughness = 0.05f,
         })
     ));
 
-    scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(1, 0, 0), .roughness = 1.0f}), load_obj("left.obj")));
+    scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(1, 0, 0)}), load_obj("left.obj")));
 
-    scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(0, 1, 0), .roughness = 1.0f}), load_obj("right.obj")));
+    scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(0, 1, 0)}), load_obj("right.obj")));
 
-    scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(1, 1, 1), .roughness = 1.0f}), load_obj("floor.obj")));
+    scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(1, 1, 1)}), load_obj("floor.obj")));
 
-    scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(1, 1, 1), .roughness = 1.0f}), load_obj("back.obj")));
+    scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(1, 1, 1)}), load_obj("back.obj")));
 
     u32 selected_index = 1;
     w.custom_key_cbs.push_back(CustomKeyCallback{
