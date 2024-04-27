@@ -23,17 +23,6 @@ find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(Catch2 REQUIRED)
 
-if (WIN32)
-    file(COPY shaders DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-
-else()
-    execute_process(
-        COMMAND bash shaders/compile_shaders.sh
-    )
-    file(COPY shaders DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/src")
-endif()
-
-
 set(LINEAR_ALGBERA_HEADERS 
     src/linear_algebra/Mat3.hpp
     src/linear_algebra/Mat4.hpp
@@ -67,7 +56,6 @@ add_executable(renderer
     src/ray-tracing/objects.hpp
     src/ray-tracing/Ray.hpp
     src/ray-tracing/Camera.hpp
-    src/ray-tracing/Material.cpp
     src/ray-tracing/Material.hpp
 
     src/renderer/renderer.cpp
