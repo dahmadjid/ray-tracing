@@ -22,6 +22,7 @@ find_package(fmt REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(Catch2 REQUIRED)
+find_package(reflect-cpp REQUIRED)
 
 set(LINEAR_ALGBERA_HEADERS 
     src/linear_algebra/Mat3.hpp
@@ -46,7 +47,6 @@ set(UTILS
     src/utils/BMP.hpp
     src/utils/Obj.hpp
     src/utils/Obj.cpp
-    
 )
     
 add_executable(renderer 
@@ -57,7 +57,7 @@ add_executable(renderer
     src/ray-tracing/Ray.hpp
     src/ray-tracing/Camera.hpp
     src/ray-tracing/Material.hpp
-
+    src/ray-tracing/BVH.hpp
     src/renderer/renderer.cpp
     src/renderer/renderer.hpp
     src/window/window.hpp
@@ -74,7 +74,7 @@ add_executable(tests
 
 
 target_include_directories(renderer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src) 
-target_link_libraries(renderer fmt::fmt glfw glm::glm Vulkan::Vulkan vulkan-headers::vulkan-headers)
+target_link_libraries(renderer fmt::fmt glfw glm::glm Vulkan::Vulkan vulkan-headers::vulkan-headers reflect-cpp::reflect-cpp)
 
 target_include_directories(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src Catch2::Catch2WithMain fmt::fmt) 
 target_link_libraries(tests glm::glm Catch2::Catch2WithMain fmt::fmt)

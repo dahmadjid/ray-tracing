@@ -9,11 +9,29 @@ template <typename T>
 struct Quaternion;
 
 template<typename T>
+struct Vec3Reflection {
+    T x;
+    T y;
+    T z;
+};
+
+
+template<typename T>
 struct Vec3 {
+    using ReflectionType = Vec3Reflection<T>;
+
+    Vec3(Vec3Reflection<T> v): x(v.x), y(v.y), z(v.z) {}
+
+    const Vec3Reflection<T>& reflection() const {
+        return {x, y, z};
+    }
+
     T x;
     T y;
     T z;
     Vec3();
+    ~Vec3() = default;
+
     explicit Vec3(T value);
 
     constexpr Vec3(T x, T y, T z);
@@ -118,6 +136,10 @@ struct Vec3 {
     
     Vec3<T>& clamp(T min, T max);
 
+    static inline Vec3<T> min(const Vec3<T>& a, const Vec3<T>& b);
+    static inline Vec3<T> max(const Vec3<T>& a, const Vec3<T>& b);
+    static inline Vec3<T> abs(const Vec3<T>& a, const Vec3<T>& b);
+
     template<typename IndexType>
     T& operator[](IndexType i);
 
@@ -167,15 +189,6 @@ static Vec3<T> operator*(const Vec3<T>& lhs, const Vec3<T>& rhs) {
     return Vec3(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z);
 }
 
-
-/**
- * @brief Element wise division
- * 
- * @tparam T 
- * @param lhs 
- * @param rhs 
- * @return Vec3<T> 
- */
 template<typename T>
 static Vec3<T> operator/(const Vec3<T>& lhs, const Vec3<T>& rhs) {
     return Vec3(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z);
@@ -206,6 +219,10 @@ static Vec3<T> operator/(const Vec3<T>& lhs, T value) {
     return Vec3(lhs.x / value, lhs.y / value, lhs.z / value);
 }
 
+template <typename T>
+static Vec3<T> operator/(T value, const Vec3<T>& lhs) {
+    return Vec3(value / lhs.x, value / lhs.y, value / lhs.z);
+}
 
 template<typename T>
 static Vec3<T> operator+(T value,  const Vec3<T>& lhs) {
@@ -217,12 +234,3 @@ static Vec3<T> operator*(T value, const Vec3<T>& lhs) {
     return Vec3(lhs.x * value, lhs.y * value, lhs.z * value);
 }
 
-template<typename T>
-static Vec3<T> min(const Vec3<T>& lhs, const Vec3<T>& rhs) {
-    return Vec3(std::min(lhs.x, rhs.x), std::min(lhs.y, rhs.y), std::min(lhs.z, rhs.z));
-}
-
-template<typename T>
-static Vec3<T> max(const Vec3<T>& lhs, const Vec3<T>& rhs) {
-    return Vec3(std::max(lhs.x, rhs.x), std::max(lhs.y, rhs.y), std::max(lhs.z, rhs.z));
-}

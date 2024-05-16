@@ -181,4 +181,26 @@ T Vec3<T>::operator[](IndexType i) const {
     return this->z;
 }
 
+
+template <typename T>
+inline Vec3<T> Vec3<T>::max(const Vec3<T>& a, const Vec3<T>& b) {
+    return Vec3(
+        std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)
+    );
+}
+
+template <typename T>
+inline Vec3<T> Vec3<T>::min(const Vec3<T>& a, const Vec3<T>& b) {
+    return Vec3(
+        std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z)
+    );
+}
+
+template <typename T>
+inline Vec3<T> Vec3<T>::abs(const Vec3<T>& a, const Vec3<T>& b) {
+    return Vec3(std::abs(a.x, b.x), std::abs(a.y, b.y), std::abs(a.z, b.z));
+}
+
+
+
 using Vec3f = Vec3<f32>;

@@ -18,24 +18,6 @@
 
 namespace RayTracer {
 
-inline f32 clamp(f32 n, f32 min, f32 max) {
-    if (n < min) {
-        return min;
-    }
-    if (n > max) {
-        return max;
-    }
-    return n;
-}
-
-inline f32 mix(f32 x, f32 y, f32 a) {
-    return x * (1 - a) + y * a;
-}
-
-inline Vec3f mix(const Vec3f& x, const Vec3f& y, f32 a) {
-    return x * (1 - a) + y * a;
-}
-
 enum class MaterialType {
     LAMBERTIAN,
     METAL,

@@ -16,15 +16,17 @@
 #include "utils/BMP.hpp"
 #include "utils/Obj.hpp"
 #include "window/window.hpp"
-
+#include "ray-tracing/BVH.hpp"
 using namespace RayTracer;
 
-constexpr Vec3f u8_color_to_float(Vec3<u8>&& color) {
+constexpr Vec3f u8_color_to_float(const Vec3<u8>& color) {
     return Vec3f(color.x / 255.0f, color.y / 255.0f, color.z / 255.0f);
 }
 
+namespace chrono = std::chrono;
+
 int main() {
-    Camera cam(45, Vec3f(0.046539098f, -0.042931885f, 5.7400503f), 0, 0, 1280, 1280);
+    Camera cam(45, Vec3f(0.046539098f, -0.042931885f, 5.7400503f), 0, 0, 320, 320);
     Window w(cam);
     auto r = renderer::Renderer(w);
     Scene scene(cam);
@@ -49,13 +51,14 @@ int main() {
         })
     ));
 
-    scene.add_object(Sphere(
-        Vec3f(.5f, -0.59f, 0.f), 0.4f,
+    scene.add_object(Mesh(
+        Vec3f(.5f, -1.f, 0.f), 
         Material({
             .type = MaterialType::METAL,
             .albedo = u8_color_to_float(Vec3<u8>(218, 165, 32)),
             .roughness = 0.05f,
-        })
+        }),
+        load_obj("suzanne.obj")
     ));
 
     scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(1, 0, 0)}), load_obj("left.obj")));
@@ -65,6 +68,9 @@ int main() {
     scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(1, 1, 1)}), load_obj("floor.obj")));
 
     scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(1, 1, 1)}), load_obj("back.obj")));
+
+
+    
 
     u32 selected_index = 1;
     w.custom_key_cbs.push_back(CustomKeyCallback{
@@ -106,6 +112,8 @@ int main() {
     });
     u32 spp = 30000;
 
+    u32 last_camera_index = 0;
+    auto now = chrono::system_clock::now();
     while (!glfwWindowShouldClose(w.m_glfw_window)) {
         glfwPollEvents();
         if (scene.m_camera.frame_index < spp) {
@@ -124,6 +132,13 @@ int main() {
 
         r.update_image(reinterpret_cast<u8*>(cam.image.data()));
         r.draw_frame();
+        auto new_now = chrono::system_clock::now();
+        auto duration = chrono::duration_cast<chrono::milliseconds>(new_now - now).count();
+        if (duration > 1000) {
+            fmt::println("{} FPS", scene.m_camera.frame_index - last_camera_index);
+            now = new_now;
+            last_camera_index = scene.m_camera.frame_index;
+        }
     }
 
     r.wait_for_device_idle();

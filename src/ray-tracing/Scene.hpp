@@ -30,11 +30,13 @@
 #include "utils/BS_thread_pool.hpp"
 #include "utils/Panic.hpp"
 #include "utils/types.hpp"
-
+#include <rfl/json.hpp>
 #define CHECK_NAN(number)       \
     if (std::isnan(number)) {   \
         panic("number is nan"); \
     }
+
+
 
 namespace RayTracer {
 
@@ -65,96 +67,88 @@ public:
         Ray ray = Ray{.origin = m_camera.position(), .direction = m_camera.get_ray(x, y)};
         Vec3f contribution = Vec3f(1.0f);
         Mesh light_mesh = m_objects.get_object<Mesh>(0);
-
-        for (u32 bounce = 0; bounce < max_bounces; ++bounce) {
-            u32 seed = x + y * m_camera.window_width + (m_camera.frame_index << 16);
-            Vec3f light{0.0f};
-            Ray ray = Ray{.origin = m_camera.position(), .direction = m_camera.get_ray(x, y)};
-            Vec3f contribution = Vec3f(1.0f);
-            Mesh light_mesh = m_objects.get_object<Mesh>(0);
-            std::optional<HitPayload> payload =
-                this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
-            if (!payload.has_value()) {
-                return light;
-            }
-            if (payload->material.get_emission() != Vec3f(0.0f)) {
-                return payload->material.get_emission();
-            }
-
-            for (u32 bounce = 0; bounce < max_bounces; ++bounce) {
-                Vec3f view_vector = -ray.direction;
-                f32 NdotV = payload->normal.dot(view_vector);
-                {
-                    auto [point, pdf] = light_mesh.sample(seed);
-                    Vec3f light_vector = point - payload->hit_position;
-                    light_vector.normalize();
-                    // test if there is nothing blocking the light.
-                    auto light_sample_payload = this->m_objects.closest_hit(
-                        Ray{
-                            .origin = payload->hit_position,
-                            .direction = light_vector,
-                        },
-                        0.001f, std::numeric_limits<f32>::max()
-                    );
-
-                    // test if we hit a light.
-                    if (light_sample_payload.has_value() && light_sample_payload->material.get_emission() != Vec3f()) {
-                        f32 NdotL = payload->normal.dot(light_vector);
-                        if (NdotL > 0) {
-                            Vec3f half_vector = (view_vector + light_vector).normalize();
-
-                            f32 NdotH = payload->normal.dot(half_vector);
-                            f32 HdotV = view_vector.dot(half_vector);
-                            f32 LdotH = light_vector.dot(half_vector);
-
-
-                            f32 mis_pdf = (pdf + payload->material.pdf(NdotH, NdotL, NdotV, HdotV));
-                            
-                            if (mis_pdf < 1e-2) {
-                                return Vec3f(0);
-                            }
-                            
-                            Vec3f light_contribution =
-                                contribution * payload->material.brdf(NdotV, NdotH, LdotH, NdotL) * NdotL / mis_pdf;
-
-                            light += light_sample_payload->material.get_emission() * light_contribution;
-                        }
-                    }
-                }
-                
-
-                {
-                    auto [light_vector, half_vector, pdf] = payload->material.sample(seed, view_vector, payload->normal);
-                    f32 NdotL = payload->normal.dot(light_vector);
-                    if (NdotL <= 0) {
-                        break;
-                    }
-                    f32 NdotH = payload->normal.dot(half_vector);
-                    f32 LdotH = light_vector.dot(half_vector);
-
-                    f32 mis_pdf = pdf + light_mesh.pdf(light_vector, payload->hit_position, payload->normal);
-
-                    if (mis_pdf < 1e-2) {
-                        return Vec3f(0);
-                    }
-
-                    contribution *= payload->material.brdf(NdotV, NdotH, LdotH, NdotL) * NdotL / mis_pdf;
-
-                    ray.origin = payload->hit_position;
-                    ray.direction = light_vector;
-
-                    payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
-                    if (!payload.has_value()) {
-                        break;
-                    }
-                    light += payload->material.get_emission() * contribution;
-                    if (payload->material.get_emission() != Vec3f(0.0f)) {
-                        break;
-                    }
-                }
-            }
+        std::optional<HitPayload> payload =
+            this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
+        if (!payload.has_value()) {
             return light;
         }
+        if (payload->material.get_emission() != Vec3f(0.0f)) {
+            return payload->material.get_emission();
+        }
+
+        for (u32 bounce = 0; bounce < max_bounces; ++bounce) {
+            Vec3f view_vector = -ray.direction;
+            f32 NdotV = payload->normal.dot(view_vector);
+            {
+                auto [point, pdf] = light_mesh.sample(seed);
+                Vec3f light_vector = point - payload->hit_position;
+                light_vector.normalize();
+                // test if there is nothing blocking the light.
+                auto light_sample_payload = this->m_objects.closest_hit(
+                    Ray{
+                        .origin = payload->hit_position,
+                        .direction = light_vector,
+                    },
+                    0.001f, std::numeric_limits<f32>::max()
+                );
+
+                // test if we hit a light.
+                if (light_sample_payload.has_value() && light_sample_payload->material.get_emission() != Vec3f()) {
+                    f32 NdotL = payload->normal.dot(light_vector);
+                    if (NdotL > 0) {
+                        Vec3f half_vector = (view_vector + light_vector).normalize();
+
+                        f32 NdotH = payload->normal.dot(half_vector);
+                        f32 HdotV = view_vector.dot(half_vector);
+                        f32 LdotH = light_vector.dot(half_vector);
+
+
+                        f32 mis_pdf = (pdf + payload->material.pdf(NdotH, NdotL, NdotV, HdotV));
+                            
+                        if (mis_pdf < 1e-2) {
+                            return Vec3f(0);
+                        }
+                            
+                        Vec3f light_contribution =
+                            contribution * payload->material.brdf(NdotV, NdotH, LdotH, NdotL) * NdotL / mis_pdf;
+
+                        light += light_sample_payload->material.get_emission() * light_contribution;
+                    }
+                }
+            }
+                
+
+            {
+                auto [light_vector, half_vector, pdf] = payload->material.sample(seed, view_vector, payload->normal);
+                f32 NdotL = payload->normal.dot(light_vector);
+                if (NdotL <= 0) {
+                    break;
+                }
+                f32 NdotH = payload->normal.dot(half_vector);
+                f32 LdotH = light_vector.dot(half_vector);
+
+                f32 mis_pdf = pdf + light_mesh.pdf(light_vector, payload->hit_position, payload->normal);
+
+                if (mis_pdf < 1e-2) {
+                    return Vec3f(0);
+                }
+
+                contribution *= payload->material.brdf(NdotV, NdotH, LdotH, NdotL) * NdotL / mis_pdf;
+
+                ray.origin = payload->hit_position;
+                ray.direction = light_vector;
+
+                payload = this->m_objects.closest_hit(ray, 0.001f, std::numeric_limits<f32>::max());
+                if (!payload.has_value()) {
+                    break;
+                }
+                light += payload->material.get_emission() * contribution;
+                if (payload->material.get_emission() != Vec3f(0.0f)) {
+                    break;
+                }
+            }
+        }
+        return light;
     }
 
     void render(u32 max_bounces) {

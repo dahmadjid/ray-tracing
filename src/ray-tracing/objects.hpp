@@ -185,9 +185,9 @@ struct Mesh {
         m_triangles.reserve(obj.faces.size());
         for (const Vec3<Vec3<i32>>& face_indices : obj.faces) {
             // -1 because .obj starts index at 1
-            Vec3f v0 = obj.vertices[face_indices.x.x - 1];
-            Vec3f v1 = obj.vertices[face_indices.y.x - 1];
-            Vec3f v2 = obj.vertices[face_indices.z.x - 1];
+            Vec3f v0 = obj.vertices[face_indices.x.x - 1] + position;
+            Vec3f v1 = obj.vertices[face_indices.y.x - 1] + position;
+            Vec3f v2 = obj.vertices[face_indices.z.x - 1] + position;
 
             Coordinate u0 = obj.uv_map[face_indices.x.y - 1];
             Coordinate u1 = obj.uv_map[face_indices.y.y - 1];
@@ -210,55 +210,28 @@ struct Mesh {
     std::vector<Triangle> m_triangles;
 };
 
-struct Box {
-    std::optional<HitPayload> hit(const Ray& ray, f32 t_min, f32 t_max) const;
 
-    Vec3f position() const {
-        return m_position;
+struct AABB {
+    Vec3f bmin = Vec3f(1e30f); 
+    Vec3f bmax = Vec3f(-1e30f);
+
+    void grow(const Vec3f& p) {
+        bmin = Vec3f::min(bmin, p);
+        bmax = Vec3f::max(bmax, p);
     }
 
-    void set_position(const Vec3f& pos) {
-        m_position = pos;
+    f32 area() const {
+        Vec3f box_extent = bmax - bmin;
+        return box_extent.x * box_extent.y + box_extent.y * box_extent.z + box_extent.z * box_extent.x;
     }
-
-    Material material() const {
-        return m_material;
-    }
-
-    Box(const Vec3f& position, f32 width, f32 height, f32 depth, f32 pitch, f32 roll, f32 yaw, const Material& material)
-        : m_position(position),
-          m_material(material),
-          m_pitch(pitch),
-          m_roll(roll),
-          m_yaw(yaw),
-          m_width(width),
-          m_height(height),
-          m_depth(depth),
-          m_halves(width / 2, height / 2, depth / 2) {
-        this->m_box_max = m_position + m_halves;
-        this->m_box_min = m_position - m_halves;
-    }
-
-    Vec3f m_position;
-    Material m_material;
-    Vec3f m_box_max;
-    Vec3f m_box_min;
-    f32 m_pitch = 0.0f;
-    f32 m_roll = 0.0f;
-    f32 m_yaw = 0.0f;
-    f32 m_width;
-    f32 m_height;
-    f32 m_depth;
-    Vec3f m_halves;
 };
 
-struct PointLight {
-    PointLight(const Vec3f& position, const Vec3f& color) : position(position), color(color) {}
-
-    Vec3f position;
-    Vec3f color;
+struct BVHNode {
+    AABB aabb;
+    u16 left_first;
+    u16 triangle_count;
 };
 
-using ObjectsList = HittableList<Sphere, Box, Triangle, Mesh>;
+using ObjectsList = HittableList<Sphere, Triangle, Mesh>;
 
 };  // namespace RayTracer

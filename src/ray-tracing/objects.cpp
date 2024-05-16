@@ -9,6 +9,98 @@
 
 #include "ray-tracing/Ray.hpp"
 #include "utils/MathUtils.hpp"
+#include <rfl/json.hpp>
+
+
+struct Triangle_t {
+    Vec3f x;
+    Vec3f y;
+    Vec3f z;
+    Vec3f edge_x;
+    Vec3f edge_y;
+    Vec3f edge_z;
+    Vec3f normal;
+    f32 distance_to_origin;
+    u16 material;
+};
+
+struct Ray_t {
+    Vec3f origin;
+    Vec3f direction;
+};
+
+struct DebugVectors_t {
+    Vec3f x;
+    Vec3f y;
+    Vec3f z;
+};
+
+struct IntersectorInput {
+    Triangle_t triangle;
+    Ray_t ray;
+};
+
+struct HitInfo_t {
+    Vec3f normal;
+    u16 material;
+    Vec3f hit_pos;
+    f32 t;
+};
+
+struct IntersectorOutput {
+    u8 hit;
+    HitInfo_t hit_info;
+    DebugVectors_t debug_vectors;
+};
+
+struct TestData {
+    IntersectorInput input;
+    IntersectorOutput output;
+};
+
+static std::vector<TestData> test_data = {};
+static std::mutex mutex_test_data;
+
+static void add_test_sample(RayTracer::Triangle tri, RayTracer::Ray ray, u8 hit, f32 t, Vec3f hit_pos, Vec3f normal_out, DebugVectors_t debug_vectors) {
+    std::lock_guard l(mutex_test_data);
+    if (test_data.size() > 49 && hit == false) {
+        return;
+    }
+    auto input = IntersectorInput{
+        .triangle =
+            Triangle_t{
+                .x = tri.m_vertices.x,
+                .y = tri.m_vertices.y,
+                .z = tri.m_vertices.z,
+                .edge_x = tri.m_edges.x,
+                .edge_y = tri.m_edges.y,
+                .edge_z = tri.m_edges.z,
+                .normal = tri.m_normal,
+                .distance_to_origin = -tri.m_normal.dot(tri.m_vertices.x),
+                .material = 2,
+            },
+        .ray = {.origin = ray.origin, .direction=ray.direction}
+    };
+
+    auto output = IntersectorOutput{
+        .hit = hit, 
+        .hit_info = HitInfo_t{
+            .normal = normal_out,
+            .material = 2,
+            .hit_pos = hit_pos,
+            .t = t
+        },
+        .debug_vectors = debug_vectors
+    };
+    
+    test_data.push_back(TestData{input, output});
+    if (test_data.size() == 100) {
+        auto test = rfl::json::write(test_data);
+        rfl::json::save("tri_intersector_test_data.json", test_data);
+        exit(0);
+    }
+}
+
 
 static f32 max_ignore_nan(f32 a, f32 b) {
     if (std::isnan(a)) {
@@ -66,67 +158,14 @@ std::optional<HitPayload> Sphere::hit(const Ray& ray, f32 t_min, f32 t_max) cons
     return payload;
 }
 
-bool rayBoxIntersect(const Ray& ray, const Box& box, float& tNear, float& tFar) {
-    tNear = -std::numeric_limits<float>::infinity();
-    tFar = std::numeric_limits<float>::infinity();
-
-    for (int i = 0; i < 3; ++i) {
-        if (ray.direction[i] == 0.0f) {
-            // Ray is parallel to the slab. No intersection if outside the slab.
-            if (ray.origin[i] < box.m_box_min[i] || ray.origin[i] > box.m_box_max[i]) {
-                return false;
-            }
-        } else {
-            float t1 = (box.m_box_min[i] - ray.origin[i]) / ray.direction[i];
-            float t2 = (box.m_box_max[i] - ray.origin[i]) / ray.direction[i];
-
-            if (t1 > t2) {
-                std::swap(t1, t2);
-            }
-
-            tNear = std::max(tNear, t1);
-            tFar = std::min(tFar, t2);
-
-            if (tNear > tFar) {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
-std::optional<HitPayload> Box::hit(const Ray& ray, f32 t_min, f32 t_max) const {
-    float tNear, tFar;
-    if (!rayBoxIntersect(ray, *this, tNear, tFar)) {
-        return std::nullopt;
-    }
-    if (tNear < t_min || tNear > t_max) {
-        return std::nullopt;
-    }
-
-    HitPayload payload{.material = this->material()};
-    payload.hit_position = ray.origin + tNear * ray.direction;
-
-    for (int i = 0; i < 3; ++i) {
-        if (payload.hit_position[i] <= m_box_min[i] + 0.0001f) {
-            payload.normal[i] = -1.0f;
-        } else if (payload.hit_position[i] >= m_box_max[i] - 0.0001f) {
-            payload.normal[i] = 1.0f;
-        }
-    }
-    if (ray.direction.dot(payload.normal) > 0) {
-        payload.normal = -payload.normal;
-    }
-    // payload.normal.normalize();
-    payload.t = tNear;
-    return payload;
-}
-
 std::optional<HitPayload> Triangle::hit(const Ray& ray, f32 t_min, f32 t_max) const {
+    u32 seed = 1231;
     f32 NdotRayDir = m_normal.dot(ray.direction);
     // this means NdotV is negative, this means we are looking at a triangle from behind
     if (NdotRayDir > 0.0f) {
+        if (rand_float(seed) < 0.1f) {
+            add_test_sample(*this, ray, 0, 0, Vec3f(), m_normal, {});
+        }
         return std::nullopt;
     }
 
@@ -134,28 +173,44 @@ std::optional<HitPayload> Triangle::hit(const Ray& ray, f32 t_min, f32 t_max) co
     f32 D = -m_normal.dot(m_vertices.x);
     payload.t = -(m_normal.dot(ray.origin) + D) / NdotRayDir;
     if (payload.t > t_max || payload.t < t_min) {
+        if (rand_float(seed) < 0.1f) {
+            add_test_sample(*this, ray, 0, payload.t, Vec3f(), Vec3f(), {});
+        }
         return std::nullopt;
     }
     payload.hit_position = ray.origin + ray.direction * payload.t;
 
     Vec3<f32> C0 = payload.hit_position - m_vertices.x;
     if (m_normal.dot(m_edges.x.cross(C0)) <= 0) {
+        if (rand_float(seed) < 0.1f) {
+            add_test_sample(*this, ray, 0, payload.t, payload.hit_position, m_normal, {Vec3(payload.t), Vec3f(), Vec3f()});
+        }
         return std::nullopt;
     }
 
     Vec3<f32> C1 = payload.hit_position - m_vertices.y;
     if (m_normal.dot(m_edges.y.cross(C1)) <= 0) {
+        if (rand_float(seed) < 0.1f) {
+            add_test_sample(*this, ray, 0, payload.t, payload.hit_position, m_normal, {Vec3(payload.t), C1, Vec3f()});
+        }
         return std::nullopt;
     }
 
     Vec3<f32> C2 = payload.hit_position - m_vertices.z;
     if (m_normal.dot(m_edges.z.cross(C2)) <= 0) {
+        if (rand_float(seed) < 0.1f) {
+            add_test_sample(*this, ray, 0, payload.t, payload.hit_position, m_normal, {Vec3(payload.t), C1, C2});
+        }
         return std::nullopt;
     }
     // P is inside the triangle
 
     payload.material = this->material();
     payload.normal = m_normal;
+
+    if (rand_float(seed) < 0.5f) {
+        add_test_sample(*this, ray, 1, payload.t, payload.hit_position, m_normal, {Vec3(payload.t), C1, C2});
+    }
 
     return payload;
 }
