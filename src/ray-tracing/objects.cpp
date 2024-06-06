@@ -10,19 +10,7 @@
 #include "ray-tracing/Ray.hpp"
 #include "utils/MathUtils.hpp"
 #include <rfl/json.hpp>
-
-
-struct Triangle_t {
-    Vec3f x;
-    Vec3f y;
-    Vec3f z;
-    Vec3f edge_x;
-    Vec3f edge_y;
-    Vec3f edge_z;
-    Vec3f normal;
-    f32 distance_to_origin;
-    u16 material;
-};
+namespace RayTracer {   
 
 struct Ray_t {
     Vec3f origin;
@@ -62,6 +50,7 @@ static std::vector<TestData> test_data = {};
 static std::mutex mutex_test_data;
 
 static void add_test_sample(RayTracer::Triangle tri, RayTracer::Ray ray, u8 hit, f32 t, Vec3f hit_pos, Vec3f normal_out, DebugVectors_t debug_vectors) {
+    return;
     std::lock_guard l(mutex_test_data);
     if (test_data.size() > 49 && hit == false) {
         return;
@@ -128,7 +117,6 @@ static f32 min_ignore_nan(f32 a, f32 b) {
     return a;
 }
 
-namespace RayTracer {
 std::optional<HitPayload> Sphere::hit(const Ray& ray, f32 t_min, f32 t_max) const {
     Vec3<f32> origin = ray.origin - this->position();
     f32 a = ray.direction.dot(ray.direction);

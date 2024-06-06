@@ -8,24 +8,26 @@
 #include <sys/types.h>
 #include <vector>
 #include <memory>
+#include <rfl/json.hpp>
 
 namespace RayTracer {
 
 
 class Camera {
+public:
     f32 m_viewport_height = 0;
     f32 m_viewport_width = 0;
     Vec3<f32> m_z_axis;
     Vec3<f32> m_position;
     f32 m_vfov = 0;
-
-public:
     std::vector<Vec4<u8>> image;
     std::vector<Vec3<f32>> ray_directions;
     std::vector<Vec3<f32>> accumulation_data;
     u32 frame_index = 1;
     u32 window_width;
     u32 window_height;
+    f32 pixel_delta_u;
+    f32 pixel_delta_v;
     
     Camera(f32 vfov, Vec3<f32> position, f32 pitch, f32 yaw, u32 w_width, u32 w_height) :  
         m_position(position), m_vfov(vfov)
@@ -36,7 +38,7 @@ public:
 
         this->rotate(pitch, yaw);
         this->calculate_ray_directions();
-    
+        rfl::json::save("ray_directions.json", this->ray_directions);
     }
 
     void resize_camera(u32 w_width, u32 w_height) {
@@ -63,6 +65,9 @@ public:
         auto up = Vec3(0.0f, 1.0f, 0.0f);
         auto right_direction = m_z_axis.cross(up).normalize().scale(m_viewport_width / 2.0f);
         auto up_direction = m_z_axis.cross(right_direction).normalize().scale(m_viewport_height / 2.0f);
+        pixel_delta_u = m_viewport_width / window_width;
+        pixel_delta_v = m_viewport_height / window_height;
+
         for (i32 y = (i32)window_height - 1; y >= 0; y--) {
             f32 v = static_cast<f32>(y) / static_cast<f32>(window_height) * 2.0f - 1.0f;
             for (u32 x = 0; x < window_width; x++) {

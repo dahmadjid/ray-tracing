@@ -57,7 +57,6 @@ public:
     ) const {
         f32 r1 = rand_float(seed);
         f32 r2 = rand_float(seed);
-
         f32 phi = 2 * PI * r2;
         f32 cos_phi = std::cos(phi);
         f32 sin_phi = std::sin(phi);
@@ -68,7 +67,7 @@ public:
             f32 y = sin_phi * sin_theta;
             f32 z = std::sqrt(1 - r1);
             ONB onb{normal_vector};
-            Vec3f light_vector = onb.local(Vec3f(x, y, z));
+            Vec3f light_vector = onb.local(Vec3f(x, y, z).normalize());
             f32 pdf = pdf_cosine(z);
             Vec3f half_vector = (light_vector + view_vector).normalize();
             return {light_vector, half_vector, pdf};
@@ -84,8 +83,8 @@ public:
             ONB onb{normal_vector};
             Vec3f half_vector =
                 onb.local(Vec3f(this->alpha * Nh.x, this->alpha * Nh.y, std::max(0.0f, Nh.z)).normalize());
-
-            Vec3f light_vector = -view_vector.reflect(half_vector);
+            
+            Vec3f light_vector = (-view_vector.reflect(half_vector)).normalize();
 
             f32 NdotH = half_vector.dot(normal_vector);
             f32 VdotH = half_vector.dot(view_vector);
@@ -96,7 +95,7 @@ public:
     }
 
     Vec3f brdf(f32 NdotV, f32 NdotH, f32 LdotH, f32 NdotL) const {
-        if (NdotL < 0 || NdotV < 0) {
+        if (NdotL < 0 || NdotV < 0 || NdotL > 1.00) {
             panic("NdotL = {}, NdotV = {}", NdotL, NdotV);
             return Vec3f();
         };

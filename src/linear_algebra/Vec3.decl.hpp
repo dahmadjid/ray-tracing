@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <format>
 #include <iostream>
-
+#include <source_location>
 template <typename T>
 struct Quaternion;
 
@@ -64,7 +64,7 @@ struct Vec3 {
      * @return Vec3& 
      */
 
-    Vec3& normalize();
+    Vec3& normalize(std::source_location loc = std::source_location::current());
     /**
      * @brief returns a new Vec3 
      * 

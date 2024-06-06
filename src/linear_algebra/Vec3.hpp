@@ -6,9 +6,11 @@
 #include <cstdint>
 #include <format>
 #include <iostream>
-
+#include <mutex>
 #include "linear_algebra/Vec3.decl.hpp"
 #include "utils/MathUtils.hpp"
+#include <rfl/json.hpp>
+using Vec3f = Vec3<f32>;
 
 template <typename T>
 constexpr Vec3<T>::Vec3(T x, T y, T z) : x(x), y(y), z(z) {}
@@ -49,12 +51,55 @@ Vec3<T>& Vec3<T>::scale(T factor) {
     return *this;
 }
 
+struct Vec3NormalizeInput {
+    Vec3f vec;
+};
+
+struct Vec3NormalizeOutput {
+    Vec3f vec_normalized;
+};
+
+struct Vec3NormalizeTestData {
+    Vec3NormalizeInput input;
+    Vec3NormalizeOutput output;
+};
+
+static std::vector<Vec3NormalizeTestData> vec3s_test_data;
+static std::vector<Vec3NormalizeTestData> vec3l_test_data;
+static std::mutex lock_vec3s;
+static std::mutex lock_vec3l;
+
+static void add_test_sample_normalize(Vec3f vec, Vec3f vec_normalized) {
+    return;
+    std::lock_guard l1(lock_vec3s);
+    std::lock_guard l2(lock_vec3l);
+    if (std::abs(vec.x) > 1.0f || std::abs(vec.y) > 1.0f || std::abs(vec.z) > 1.0f) {
+        if (vec3l_test_data.size() < 100) {
+            vec3l_test_data.push_back({{vec}, {vec_normalized}});
+        }
+    } else if (std::abs(vec.x) > 0.01f && std::abs(vec.y) > 0.01f && std::abs(vec.z) > 0.01f) {
+        if (vec3s_test_data.size() < 100) {
+            vec3s_test_data.push_back({{vec}, {vec_normalized}});
+        }
+    }
+    if (vec3s_test_data.size() == 100 && vec3l_test_data.size() == 100) {
+        rfl::json::save("vec3s_normalize_test_data.json", vec3s_test_data);
+        rfl::json::save("vec3l_normalize_test_data.json", vec3l_test_data);
+        exit(0);
+    }
+}
+
 template <typename T>
-Vec3<T>& Vec3<T>::normalize() {
+Vec3<T>& Vec3<T>::normalize(std::source_location loc) {
+    auto copy = Vec3<T>(*this);
     T one_over_length = static_cast<T>(1) / this->length();
     this->x *= one_over_length;
     this->y *= one_over_length;
     this->z *= one_over_length;
+    if constexpr (std::is_same_v<T, f32>) {
+        add_test_sample_normalize(copy, *this);
+    }
+
     return *this;
 }
 
@@ -203,4 +248,3 @@ inline Vec3<T> Vec3<T>::abs(const Vec3<T>& a, const Vec3<T>& b) {
 
 
 
-using Vec3f = Vec3<f32>;

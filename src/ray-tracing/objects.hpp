@@ -14,6 +14,17 @@
 #include "utils/SameAsAny.hpp"
 
 namespace RayTracer {
+struct Triangle_t {
+    Vec3f x;
+    Vec3f y;
+    Vec3f z;
+    Vec3f edge_x;
+    Vec3f edge_y;
+    Vec3f edge_z;
+    Vec3f normal;
+    f32 distance_to_origin;
+    u16 material;
+};
 
 struct HitPayload {
     Vec3f hit_position;
@@ -139,7 +150,7 @@ struct Triangle {
         m_edges.x = m_vertices.y - m_vertices.x;
         m_edges.y = m_vertices.z - m_vertices.y;
         m_edges.z = m_vertices.x - m_vertices.z;
-        m_normal = m_edges.x.cross(m_edges.y).normalize();
+        m_normal = (m_edges.x.cross(m_edges.y)).normalize();
 
         // https://math.stackexchange.com/questions/128991/how-to-calculate-the-area-of-a-3d-triangle
         Vec3f ab = m_vertices.x - m_vertices.y;
