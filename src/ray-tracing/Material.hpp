@@ -124,9 +124,9 @@ public:
 
         f32 D = D_GGX(NdotH);
         Vec3f F = F_Schlick(LdotH, this->albedo);
-        f32 V_SmithGGX = V_SmithGGXCorrelated(NdotV, NdotL);
+        f32 V = V_SmithGGX(NdotV, NdotL);
 
-        return D * V_SmithGGX * F;
+        return D * V * F;
     }
 
 
@@ -148,10 +148,13 @@ public:
         return f + f0 * (1.0f - f);
     }
 
-    inline f32 V_SmithGGXCorrelated(f32 NoV, f32 NoL) const {
-        f32 GGXL = NoV * std::sqrt((-NoL * this->alpha2 + NoL) * NoL + this->alpha2);
-        f32 GGXV = NoL * std::sqrt((-NoV * this->alpha2 + NoV) * NoV + this->alpha2);
-        return 0.5f / (GGXV + GGXL);
+    inline f32 inv_V1(f32 NdotK) const {
+        return NdotK * std::sqrt(this->alpha2 + (1 - alpha2) * NdotK * NdotK);
+    }
+
+    inline f32 V_SmithGGX(f32 NoV, f32 NoL) const {
+        f32 out = std::max((inv_V1(NoV) * inv_V1(NoL)), 0.1f);
+        return 1.0f / out;
     }
 
     // NdotL or NdotV

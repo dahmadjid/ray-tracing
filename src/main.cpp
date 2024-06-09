@@ -40,24 +40,41 @@ int main() {
         )
     );
 
-    scene.add_object(Sphere(
-        Vec3f(-.5f, -0.59f, 0.f), 0.4f,
+    //scene.add_object(Sphere(
+    //    Vec3f(-.5f, -0.59f, 0.f), 0.4f,
+    //    Material({
+    //        .type = MaterialType::METAL,
+    //        .albedo = u8_color_to_float(Vec3<u8>(218, 165, 32)),
+    //        .roughness = 0.05f,
+    //    })
+    //));
+
+    //scene.add_object(Sphere(
+    //    Vec3f(.5f, -0.59f, 0.f), 0.4f,
+    //    Material({
+    //        .type = MaterialType::METAL,
+    //        .albedo = u8_color_to_float(Vec3<u8>(218, 165, 32)),
+    //        .roughness = 0.05f,
+    //    })
+    //));
+    scene.add_object(Mesh(
+        Vec3f(),
         Material({
             .type = MaterialType::METAL,
-            .albedo = u8_color_to_float(Vec3<u8>(218, 165, 32)),
-            .roughness = 0.05f,
-        })
+            .albedo = u8_color_to_float(Vec3<u8>(255)),
+            .roughness = 0.0f,
+        }),
+        load_obj("cube1.obj")
     ));
 
-    scene.add_object(Sphere(
-        Vec3f(.5f, -0.59f, 0.f), 0.4f,
+    scene.add_object(Mesh(
+        Vec3f(),
         Material({
-            .type = MaterialType::METAL,
+            .type = MaterialType::LAMBERTIAN,
             .albedo = u8_color_to_float(Vec3<u8>(218, 165, 32)),
-            .roughness = 0.05f,
-        })
+        }),
+        load_obj("cube2.obj")
     ));
-
     scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(1, 0, 0)}), load_obj("left.obj")));
 
     scene.add_object(Mesh(Vec3f(), Material({.albedo = Vec3f(0, 1, 0)}), load_obj("right.obj")));
@@ -104,14 +121,14 @@ int main() {
                 cam.reset_accu_data();
             },
     });
-    u32 spp = 30000;
+    u32 spp = 4096;
 
     while (!glfwWindowShouldClose(w.m_glfw_window)) {
         glfwPollEvents();
         if (scene.m_camera.frame_index < spp) {
-            scene.render(4);
+            scene.render(8);
         } else {
-            write_bmp_image("render.bmp", cam.image, cam.window_width, cam.window_height);
+            write_bmp_image("D:\\render.bmp", cam.image, cam.window_width, cam.window_height);
             std::terminate();
         }
         if (w.framebuffer_resized) {
