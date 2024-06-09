@@ -220,9 +220,9 @@ public:
 
         f32 D = D_GGX(NdotH);
         Vec3f F = F_Schlick(LdotH, this->albedo);
-        f32 V_SmithGGX = V_SmithGGXCorrelated(NdotV, NdotL);
+        f32 V = V_SmithGGX(NdotV, NdotL);
 
-        return D * V_SmithGGX * F;
+        return D * V * F;
     }
 
 
@@ -232,53 +232,27 @@ public:
 
     // https://google.github.io/filament/Filament.html
     inline f32 D_GGX(f32 NoH) const {
-        std::lock_guard l(ct_mutex);
-        if (d_test_data.size() >= 100 || rand_float(seed____) < 0.5) {
-            return 0;
-        }
         if (NoH < 1e-6) {
-            d_test_data.push_back({
-                .alpha2 = this->alpha2,
-                .NdotH = NoH,
-                .D = 0,
-            });
             return 0;
         }
         f32 f = (NoH * this->alpha2 - NoH) * NoH + 1.0f;
         f32 D = this->alpha2 / ((f32)std::numbers::pi * f * f);
-        d_test_data.push_back({
-            .alpha2 = this->alpha2,
-            .NdotH = NoH,
-            .D = D,
-        });
         return D;
     }
 
     inline Vec3f F_Schlick(float u, Vec3f f0) const {
-        std::lock_guard l(ct_mutex);
-        if (f_test_data.size() >= 100 || rand_float(seed____) < 0.5) {
-            return {};
-        }
         f32 f = std::pow(1.0f - u, 5.0f);
         Vec3f F = f + f0 * (1.0f - f);
-        f_test_data.push_back({.u = u, .f0 = f0, .F = F});
         return F;
     }
 
-    inline f32 V_SmithGGXCorrelated(f32 NoV, f32 NoL) const {
-        std::lock_guard l(ct_mutex);
-        if (v_test_data.size() >= 100 || rand_float(seed____) < 0.5) {
-            return 0;
-        }
-        f32 GGXL = NoV * std::sqrt((-NoL * this->alpha2 + NoL) * NoL + this->alpha2);
-        f32 GGXV = NoL * std::sqrt((-NoV * this->alpha2 + NoV) * NoV + this->alpha2);
-        f32 V = 0.5f / (GGXV + GGXL);
-        v_test_data.push_back({
-            .NdotL = NoL,
-            .NdotV = NoV,
-            .alpha2 = this->alpha2,
-            .V = V
-        });
+    inline f32 inv_V1(f32 NdotK) const {
+        return NdotK * std::sqrt(this->alpha2 + (1 - alpha2) * NdotK * NdotK);
+    }
+
+    inline f32 V_SmithGGX(f32 NoV, f32 NoL) const {
+        f32 out = std::max((inv_V1(NoV) * inv_V1(NoL)), 0.1f);
+        f32 V = 1.0f / out;
         return V;
     }
 
@@ -287,22 +261,6 @@ public:
         std::lock_guard l(ct_mutex);
         f32 NdotK2 = NdotK * NdotK;
         f32 G1 = 2.0f / (sqrt(((this->alpha2 * (1.0f - NdotK2)) + NdotK2) / NdotK2) + 1.0f);
-        if (g1_test_data.size() < 100 && rand_float(seed____) < 0.5) {
-            g1_test_data.push_back({.NdotK = NdotK, .alpha2 = this->alpha2, .G1 = G1});
-        }
-        if (d_test_data.size() == 100 && v_test_data.size() == 100 && f_test_data.size() == 100 &&
-            g1_test_data.size() == 100) {
-            rfl::json::save("d_test_data.json", d_test_data);
-            rfl::json::save("f_test_data.json", f_test_data);
-            rfl::json::save("v_test_data.json", v_test_data);
-            rfl::json::save("g1_test_data.json", g1_test_data);
-            exit(1);
-        } else {
-            fmt::println(
-                "???????????????????? ================== {} {} {} {}", d_test_data.size(), v_test_data.size(),
-                f_test_data.size(), g1_test_data.size()
-            );
-        }
         return G1;
     }
 

@@ -33,11 +33,64 @@ struct SceneJson {
     f32 pixel_delta_v;
 };
 
+struct D_RomData {
+    f32 roughness;
+    f32 NdotH;
+    f32 D;
+};
+
+struct V1_RomData {
+    f32 roughness;
+    f32 NdotK;
+    f32 V;
+};
+
+struct G1_RomData {
+    f32 roughness;
+    f32 NdotK;
+    f32 G1;
+};
+
+struct F_RomData {
+    f32 u;
+    f32 one_minus_u_pow_5;
+};
+
+
 int main() {
+    f32 roughness_step = 1.0f / 16;  // assuming 4 bit roughness
+    f32 NdotK_step = 1.0f / 256;  // assuming 8 NdotH
+    std::vector<D_RomData> d_rom;
+    std::vector<V1_RomData> v1_rom;
+    std::vector<G1_RomData> g1_rom;
+    std::vector<F_RomData> f_rom;
 
+    for (int i = 0; i < 16; i++) {
+        f32 roughness = roughness_step * i;
+        auto mat = Material({.roughness = roughness}); 
+        for (int j = 0; j < 256; j++) {
+            f32 NdotK = NdotK_step * j;
+            f32 D = mat.D_GGX(NdotK);
+            f32 G1 = mat.Smith_G1_GGX(NdotK);
+            f32 V1 = 1.0f / std::max(mat.inv_V1(NdotK), 0.001f);
+            d_rom.push_back({roughness, NdotK, D});
+            g1_rom.push_back({roughness, NdotK, G1});
+            v1_rom.push_back({roughness, NdotK, V1});
+        }
+    }
 
-
-
+    f32 u_step = 1.0f / 4096;  // assuming 12 bit
+    for (int j = 0; j < 4096; j++) {
+        f32 u = u_step * j;
+        f32 f = std::pow(1.0f - u, 5.0f);
+        f_rom.push_back({u, f});
+    }
+    fmt::println(">>>>>>>>>>>> {} {} {} {}", d_rom.size(), g1_rom.size(), v1_rom.size(), f_rom.size());
+    rfl::json::save("d_rom.json", d_rom);
+    rfl::json::save("g1_rom.json", g1_rom);
+    rfl::json::save("v1_rom.json", v1_rom);
+    rfl::json::save("f_rom.json", f_rom);
+    std::terminate();
     Camera cam(45, Vec3f(0.046539098f, -0.042931885f, 5.7400503f), 0, 0, 256, 256);
     Window w(cam);
     auto r = renderer::Renderer(w);
