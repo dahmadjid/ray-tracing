@@ -34,6 +34,10 @@ struct SceneJson {
 };
 
 int main() {
+
+
+
+
     Camera cam(45, Vec3f(0.046539098f, -0.042931885f, 5.7400503f), 0, 0, 256, 256);
     Window w(cam);
     auto r = renderer::Renderer(w);
@@ -49,6 +53,9 @@ int main() {
             load_obj("light.obj")
         )
     );
+
+
+
 
     //scene.add_object(Sphere(
     //    Vec3f(-.5f, -0.59f, 0.f), 0.4f,
@@ -166,7 +173,7 @@ int main() {
                 cam.reset_accu_data();
             },
     });
-    u32 spp = 16;
+    u32 spp = 4096;
 
     u32 last_camera_index = 0;
     auto now = chrono::system_clock::now();

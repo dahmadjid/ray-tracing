@@ -50,22 +50,22 @@ public:
 
     inline Vec3f local(const Vec3f& a) const {
         auto out = (a.x * u() + a.y * v() + a.z * w()).normalize();
-        if (rand_float(seed) > 0.995f) {
-            onb_test_data_mutex.lock();
-            onb_test_cases[i] = {
-                .input_normal = w(),
-                .input_vec = a,
-                .output_vec = out,
-                .debug_u = u(),
-                .debug_v = v(),
-            };
-            i++;
-            onb_test_data_mutex.unlock();
-        }
-        if (i == 1000) {
-            rfl::json::save("onb_test_data.json", onb_test_cases);
-            exit(1);
-        }
+        //if (rand_flo/*at(seed) > 0.995f) {
+        //    onb_test_data_mutex.lock();
+        //    onb_test_cases[i] = {
+        //        .input_normal = w(),
+        //        .input_vec = a,
+        //        .output_vec = out,
+        //        .debug_u = u(),
+        //        .debug_v = v(),
+        //    };
+        //    i++;
+        //    onb_test_data_mutex.unlock();
+        //}
+        //if (i == 1000) {
+        //    rfl::json::save("onb_test_data.json", onb_test_cases);
+        //    exit(1);
+        //}*/
         return out;
     }
 

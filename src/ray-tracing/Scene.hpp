@@ -121,7 +121,6 @@ public:
             {
                 auto [light_vector, half_vector, pdf] = payload->material.sample(seed, view_vector, payload->normal);
                 f32 NdotL = payload->normal.dot(light_vector);
-                fmt::println("NdotL={} material={}", NdotL, (int)payload->material.type);
                 if (NdotL <= 0) {
                     break;
                 }
